@@ -3,4 +3,6 @@
     --foreground-color: #161616;
 
     --default-text-color: #d1d1d1;
+
+    --transparent-background: rgba(0, 0, 0, 0.5);
 }

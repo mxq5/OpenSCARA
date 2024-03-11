@@ -20,6 +20,9 @@ body, html {
 
 nav {
     background-color: var(--foreground-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .logo {
@@ -31,6 +34,14 @@ nav {
 .nav-tile {
     width: 70px;
     height: 70px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+
+    user-select: none;
 }
 
 .dottedBackground {
@@ -72,4 +83,40 @@ nav {
     cursor: pointer;
     margin: 0 5px;
     box-sizing: border-box;
+}
+
+
+.controlView {
+    width: 100%;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 50% 50%;
+
+    background-color: var(--transparent-background);
+}
+
+.controlView__3dView {
+    width: 100%;
+    height: 100%;
+}
+
+.controlView__controls {
+    box-sizing: border-box;
+    padding: 50px;
+
+    width: 100%;
+    height: 100%;
+    
+    backdrop-filter: invert(10%);
+}
+
+.connectView__controls__properties {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.controlButton {
+    background-color: var(--background-color);
+    color: var(--default-text-color);
 }

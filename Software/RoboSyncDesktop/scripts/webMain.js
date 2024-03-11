@@ -7,8 +7,11 @@ const connectButton = document.getElementById('connectButton');
 
 /* Views */
 const connectView = document.getElementById('connectView');
+const controlView = document.getElementById('controlView');
 
 window.addEventListener('DOMContentLoaded', () => {
+  connectView.style.display = 'none';
+
   SerialPort.list().then(ports => {
     console.log(ports)
   })
@@ -19,5 +22,5 @@ window.addEventListener('DOMContentLoaded', () => {
 connectButton.addEventListener('click', () => {
   console.log('Do some stuff...');
   
-  connectView.style.display = 'none';
+  //connectView.style.display = 'none';
 });

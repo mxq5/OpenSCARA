@@ -8,15 +8,39 @@
 <body>
     <div id="app">
         <nav>
-            <div class="nav-tile logo"></div>
-            <div class="nav-tile">
-                <span class="material-symbols-outlined">
-                    home
-                </span>
+            <div class="topmenu">
+                <div class="nav-tile logo"></div>
+                <div class="nav-tile" title="Kontroluj">
+                    <span class="material-symbols-outlined">
+                        precision_manufacturing
+                    </span>
+                </div>
+                <div class="nav-tile" title="Zaprogramuj">
+                    <span class="material-symbols-outlined">
+                        data_object
+                    </span>
+                </div>
+                <div class="nav-tile" title="Konsola">
+                    <span class="material-symbols-outlined">
+                        subtitles
+                    </span>
+                </div>
             </div>
-            <div class="nav-tile"></div>
+            <div class="bottommenu">
+                <div class="nav-tile" title="Konsola">
+                    <span class="material-symbols-outlined">
+                        menu
+                    </span>
+                </div>
+                <div class="nav-tile" title="Konsola">
+                    <span class="material-symbols-outlined">
+                        settings
+                    </span>
+                </div>
+            </div>
         </nav>
         <main class="dottedBackground">
+            
             <div id="connectView" class="connectView dottedBackground">
                 <div class="connectView__form">
                     <h1>Connect to OpenSCARA</h1>
@@ -28,8 +52,57 @@
                     <button id="connectButton">Connect</button>
                 </div>
             </div>
+
+            <div id="controlView" class="controlView">
+               <div>
+                    <div id="3DView" class="controlView__3dView"></div>
+               </div>
+               <div>
+                    <div class="controlView__controls">
+                        <h1>Kontrola Robota</h1>
+                        <div class="controlView__controls__properties">
+                            <button class="controlButton" id="moveToHomeButton">
+                                <span class="material-symbols-outlined">
+                                    home
+                                </span>
+                            </button>
+                            <button class="controlButton" id="moveToHomeButton">
+                                <span class="material-symbols-outlined">
+                                    arrow_back
+                                </span>
+                            </button>
+                            <button class="controlButton" id="moveToHomeButton">
+                                <span class="material-symbols-outlined">
+                                    arrow_forward
+                                </span>
+                            </button>
+                            <button class="controlButton" id="moveToHomeButton">
+                                <span class="material-symbols-outlined">
+                                    arrow_upward
+                                </span>
+                            </button>
+                            <button class="controlButton" id="moveToHomeButton">
+                                <span class="material-symbols-outlined">
+                                    arrow_downward
+                                </span>
+                            </button>
+                        </div>
+                        <h2>Koordy: X:0 Y:0 Z:0 </h2>
+                    </div>
+               </div>
+            </div>
+
         </main>
     </div>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+          }
+        }
+      </script>
     <script src="../scripts/webMain.js"></script>
+    <script type="module"src="../scripts/3DView.js"></script>
 </body>
 </html>
