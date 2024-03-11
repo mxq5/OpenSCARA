@@ -5,7 +5,7 @@ const { SerialPort } = require('serialport');
 /* Interactive components */
 const connectButton = document.getElementById('connectButton');
 
-/* Visibility states */
+/* Views */
 const connectView = document.getElementById('connectView');
 
 window.addEventListener('DOMContentLoaded', () => {
