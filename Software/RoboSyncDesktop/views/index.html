@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>RoboSync Desktop</title>
-    <script src="../scripts/main.js"></script>
     <link rel="stylesheet" href="../styles/main.css">
 </head>
 <body>
     <div id="app">
-        <header>
         <nav>
-            
+            <div class="nav-tile logo"></div>
+            <div class="nav-tile"></div>
+            <div class="nav-tile"></div>
         </nav>
-        </header>
-        <main>
-        
+        <main class="dottedBackground">
+            <div id="connectView" class="connectView dottedBackground">
+                <div class="connectView__form">
+                    <h1>Connect to OpenSCARA</h1>
+                    Choose COM port: <select id="comPortSelect">
+                        <option>COM1</option>
+                        <option>COM2</option>
+                        <option>COM3</option>
+                    </select>
+                    <button id="connectButton">Connect</button>
+                </div>
+            </div>
         </main>
     </div>
+    <script src="../scripts/webMain.js"></script>
 </body>
 </html>

@@ -1,12 +1,19 @@
-import { app, BrowserWindow } from 'electron';
+const electron = require('electron');
+const path = require('path');
+
+const BrowserWindow = electron.BrowserWindow;
+const app = electron.app;
+
+const devtools = false;
 
 function createWindow() {
     // Create the browser window
     const win = new BrowserWindow({
         title: 'RoboSync Desktop',
-        width: 1356,
-        height: 860,
-        icon: 'graphics/icon.ico',
+        minWidth: 1356,
+        minHeight: 860,
+        center: true,
+        icon: path.join(__dirname, 'graphics/icon.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -18,7 +25,7 @@ function createWindow() {
     win.setMenu(null);
 
     // Open the DevTools
-    win.webContents.openDevTools();
+    if(devtools) win.webContents.openDevTools();
 }
 
 // When the app is ready, create the window

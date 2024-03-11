@@ -1,4 +1,74 @@
+@import url('fonts.css');
+@import url('colors.css');
+
 body, html {
     margin: 0; 
     padding: 0;
+    font-family: 'SpaceGrotesk';
+    color: var(--default-text-color);
+}
+
+#app {
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 70px auto;
+    background-color: var(--background-color);
+}
+
+nav {
+    background-color: var(--foreground-color);
+}
+
+.logo {
+    background: url(../graphics/banner.webp) no-repeat center center;
+    background-size: cover;
+    filter: grayscale(100%);
+}
+
+.nav-tile {
+    width: 70px;
+    height: 70px;
+}
+
+.dottedBackground {
+    --dot-bg: black;
+    --dot-color: white;
+    --dot-size: 1px;
+    --dot-space: 22px;
+      background:
+          linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+          linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+          var(--dot-color);
+}
+
+/* ----------------- */
+
+.connectView {
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+.connectView__form {
+    background-color: var(--foreground-color);
+    padding: 20px;
+}
+
+#comPortSelect, #connectButton {
+    width: auto;
+    background-color: var(--background-color);
+    color: var(--default-text-color);
+    border: none;
+    padding: 7px;
+    cursor: pointer;
+    margin: 0 5px;
+    box-sizing: border-box;
 }

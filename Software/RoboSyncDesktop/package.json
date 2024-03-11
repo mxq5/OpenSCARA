@@ -1,6 +1,5 @@
 {
   "name": "robosyncdesktop",
-  "type": "module",
   "version": "1.0.0",
   "description": "Desktop app for OpenSCARA robot",
   "main": "main.js",
