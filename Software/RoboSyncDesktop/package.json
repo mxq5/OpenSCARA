@@ -1,12 +1,14 @@
 {
   "name": "robosyncdesktop",
-  "type":"module",
+  "type": "module",
   "version": "1.0.0",
   "description": "Desktop app for OpenSCARA robot",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win"
   },
   "repository": {
     "type": "git",
@@ -25,9 +27,20 @@
   },
   "homepage": "https://github.com/mxq5/OpenSCARA#readme",
   "devDependencies": {
-    "electron": "^29.1.1"
+    "electron": "^29.1.1",
+    "electron-builder": "^24.13.3"
   },
   "dependencies": {
     "serialport": "^12.0.0"
+  },
+  "build": {
+    "appId": "com.openscara.robosyncdesktop",
+    "productName": "RoboSync Desktop",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "graphics/icon.ico"
+    }
   }
 }

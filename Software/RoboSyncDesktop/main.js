@@ -4,8 +4,8 @@ function createWindow() {
     // Create the browser window
     const win = new BrowserWindow({
         title: 'RoboSync Desktop',
-        width: 1200,
-        height: 720,
+        width: 1356,
+        height: 860,
         icon: 'graphics/icon.ico',
         webPreferences: {
             nodeIntegration: true,
