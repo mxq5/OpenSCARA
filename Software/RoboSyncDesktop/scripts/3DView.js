@@ -162,25 +162,32 @@ class Arm {
         return this.IKIndicator;
     }
 
-    rtd (rad) {
-        return rad * (180/Math.PI); 
-    }
+    dtr = (rad) => { return (rad * (Math.PI/180)); }
+    rtd = (rad) => { return (rad * (180/Math.PI)); }
 
-    inverseKinematics(x, y, z) {
-        // Odległość w lini prostej z bazy do punktu
-        let j1 = 11;
-        let j2 = 18;
+    inverseKinematics(z, y, x) {
+        let a = 2.85;      // J1 arm length
+        let b = 2.45;    
+        let heightOffset = -0.2;
         let height = y;
 
-        // Odległość w linii prostej od (0, 0)
-        let r =  Math.sqrt(x**2 + z**2) * 10;
-        console.log("R: ", r);
+        const c = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
 
-        const offset = 0.7;
-        let gamma = 0;
-        let beta = 0;
-        height = 1;
-        return [gamma, beta, height];
+        let gamma = Math.acos(( (c**2 - a**2 - b**2) / (-2 * a * b) ));
+        let beta = Math.acos((( b**2 - a**2 - c**2 ) / ( -2 * a * c)));
+
+        // Do tąd jest ok
+
+        let alpha = (Math.asin(z/c) - beta);
+
+        gamma = Math.PI - gamma;
+
+        if(x < 0) {
+            alpha = Math.PI - alpha;
+            gamma = Math.PI * 2 - gamma;
+        }
+
+        return [alpha, gamma, height + heightOffset];
     }
 
 }
@@ -271,6 +278,7 @@ window.addEventListener('keydown', (event) => {
     if(event.key === "w") {
         arm.IKIndicator.z -= 0.1;
         arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        console.log(arm.IKIndicator);
     } else if(event.key === "s") {
         arm.IKIndicator.z += 0.1;
         arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
@@ -287,12 +295,16 @@ window.addEventListener('keydown', (event) => {
         arm.IKIndicator.y -= 0.1;
         arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
     }
+
+    if (event.key === "g") {
+        console.log(arm.IKIndicator);
+    }
     
     if (event.key === "i") {
         const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
         arm.setJ1Angle(j1);
         arm.setJ2Angle(j2);
         arm.setHeight(height);
-    }
     
+    } 
 });
