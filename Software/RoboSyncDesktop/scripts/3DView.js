@@ -190,6 +190,57 @@ class Arm {
         return [alpha, gamma, height + heightOffset];
     }
 
+
+    transition(j1, j2, height) {
+        // Przykładowe pozycje parametrów - mogą to być na przykład czasy próbek.
+        // Dla uproszczenia używamy [0, 1], co oznacza, że mamy dwie próbki: jedną na początku (czas = 0) i jedną na końcu (czas = 1).
+        const parameterPositions = new Float32Array([0, 1]);
+
+        // Przykładowe wartości próbek. Tutaj mamy dwie próbki w przestrzeni 3D, więc potrzebujemy 6 wartości (2 próbki * 3 wartości na próbkę).
+        const sampleValues = new Float32Array(
+            [
+                this.joints.J1.angle, this.joints.J2.angle, this.joints.Z.height, 
+                j1, j2, height
+            ]
+        ); // Z pierwszego punktu [0, 0, 0] do drugiego [10, 10, 10].
+
+
+        // Rozmiar próbki. Dla 3D jest to 3, ponieważ mamy do czynienia z trójwymiarowymi punktami (x, y, z).
+        const sampleSize = 3;
+
+        // Bufor wynikowy, gdzie zostanie zapisany wynik interpolacji.
+        const resultBuffer = new Float32Array(sampleSize);
+
+        // Tworzenie interpolanta.
+        const interpolant = new THREE.LinearInterpolant( parameterPositions, sampleValues, sampleSize, resultBuffer );
+
+        // Wykonanie interpolacji. Używamy 0.5, aby uzyskać wartość środkową między naszymi dwoma punktami próbkami.
+        interpolant.evaluate(0.5);
+
+        console.log(resultBuffer);
+        
+        // Liczba punktów do interpolacji (więcej punktów = gładsza ścieżka)
+        const steps = 10;
+        const interpolatedValues = [];
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            interpolant.evaluate(t);
+            interpolatedValues.push([...resultBuffer]);
+        }
+
+        for (let i = 0; i < interpolatedValues.length; i++) {
+            setTimeout(() => {
+                let [j1, j2, height] = interpolatedValues[i];
+                this.setJ1Angle(j1);
+                this.setJ2Angle(j2);
+                this.setHeight(height);
+                
+                this.render();
+            }, 10 * i);
+        }
+    }
+
 }
 
 // Create a scene
@@ -238,7 +289,7 @@ const arm = new Arm(scene, render);
 
 let j1 = 0;
 let j2 = 0
-const step = 0.7;
+const step = 0.2;
 // Controls
 moveForward.addEventListener('click', () => {
     j2++;
@@ -261,18 +312,18 @@ moveDown.addEventListener('click', () => {
 });
 
 moveToHome.addEventListener('click', () => {
-    console.log(arm.J1angle, arm.J2angle);
+    arm.transition(0, 0, 0);
 });
 
-let zheight = 0;
+
 window.addEventListener('keydown', (event) => {
     if(event.key === "q") {
-        zheight -= 0.1;
-        arm.setHeight(zheight);
+        arm.joints.Z.height -= 0.1;
+        arm.setHeight(arm.joints.Z.height);
     }
     else if(event.key === "e") {
-        zheight += 0.1;
-        arm.setHeight(zheight);
+        arm.joints.Z.height += 0.1;
+        arm.setHeight(arm.joints.Z.height);
     }
 
     if(event.key === "w") {
@@ -302,9 +353,6 @@ window.addEventListener('keydown', (event) => {
     
     if (event.key === "i") {
         const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
-        arm.setJ1Angle(j1);
-        arm.setJ2Angle(j2);
-        arm.setHeight(height);
-    
+        arm.transition(j1, j2, height);
     } 
 });

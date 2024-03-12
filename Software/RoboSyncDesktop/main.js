@@ -4,7 +4,7 @@ const path = require('path');
 const BrowserWindow = electron.BrowserWindow;
 const app = electron.app;
 
-const devtools = false;
+const devtools = !false;
 
 function createWindow() {
     // Create the browser window
