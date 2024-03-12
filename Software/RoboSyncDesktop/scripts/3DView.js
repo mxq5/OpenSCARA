@@ -261,7 +261,7 @@ const moveDown = document.getElementById('ad');
 // Create a camera
 const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 1000);
 
-camera.position.set( 7, 7, 12);
+camera.position.set( 5, 5, 12);
 camera.lookAt( 0, 0, 0 );
 
 // Create a renderer
@@ -341,10 +341,6 @@ window.addEventListener('keydown', (event) => {
     } else if (event.key === "z") {
         arm.IKIndicator.y -= 0.1;
         arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
-    }
-
-    if (event.key === "g") {
-        console.log(arm.IKIndicator);
     }
     
     if (event.key === "i") {
