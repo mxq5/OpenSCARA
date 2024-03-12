@@ -286,29 +286,25 @@ function render() { renderer.render(scene, camera); }
 
 const arm = new Arm(scene, render);
 
-
-let j1 = 0;
-let j2 = 0
-const step = 0.2;
 // Controls
 moveForward.addEventListener('click', () => {
-    j2++;
-    arm.setJ2Angle(j2*step);
+    arm.joints.J2.angle += 0.1;
+    arm.setJ2Angle(arm.joints.J2.angle);
 });
 
 moveBackward.addEventListener('click', () => {
-    j2--;
-    arm.setJ2Angle(j2*step);
+    arm.joints.J2.angle -= 0.1;
+    arm.setJ2Angle(arm.joints.J2.angle);
 });
 
 moveUp.addEventListener('click', () => {
-    j1++;
-    arm.setJ1Angle(j1*step);
+    arm.joints.J1.angle += 0.1;
+    arm.setJ1Angle(arm.joints.J1.angle);
 });
 
 moveDown.addEventListener('click', () => {
-    j1--;
-    arm.setJ1Angle(j1*step);
+    arm.joints.J1.angle -= 0.1;
+    arm.setJ1Angle(arm.joints.J1.angle);
 });
 
 moveToHome.addEventListener('click', () => {
