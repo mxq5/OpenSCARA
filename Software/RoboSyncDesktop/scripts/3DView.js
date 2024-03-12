@@ -41,9 +41,9 @@ class Arm {
         this.setupAxes();
 
         this.IKIndicator = { 
-            x: this.joints.gripper.offsets.x - 1, 
+            x: this.joints.gripper.offsets.x - 2, 
             y: 0 + 2, 
-            z: this.joints.gripper.offsets.z - 1.2
+            z: this.joints.gripper.offsets.z - 3
         };
         this.IKindicatorModel = this.spawnIKIndicator();
     }
@@ -162,26 +162,25 @@ class Arm {
         return this.IKIndicator;
     }
 
+    rtd (rad) {
+        return rad * (180/Math.PI); 
+    }
+
     inverseKinematics(x, y, z) {
         // Odległość w lini prostej z bazy do punktu
-        let j1 = 3;
-        let j2 = 2.4;
-    
-        // Odległość od podstawy
-        let r =  x**2 + y**2;
-    
-        console.log("R", r);
-    
-        // Kąt pomiędzy ramionami
-        //let gamma = Math.acos((r  - x**2 - y**2) / (-2*x*y) );
-        //let baseAngle = Math.acos((x**2 - r - y**2) / (-2*Math.sqrt(r)*y) );
-        
-        let gamma = Math.acos(( r - j1**2 - j2**2 ) / ( -2*j1*j2 ));
-        
-        console.log("IK: " + gamma, gamma);
-    
+        let j1 = 11;
+        let j2 = 18;
+        let height = y;
+
+        // Odległość w linii prostej od (0, 0)
+        let r =  Math.sqrt(x**2 + z**2) * 10;
+        console.log("R: ", r);
+
         const offset = 0.7;
-        return [0, gamma, z];
+        let gamma = 0;
+        let beta = 0;
+        height = 1;
+        return [gamma, beta, height];
     }
 
 }
@@ -232,7 +231,7 @@ const arm = new Arm(scene, render);
 
 let j1 = 0;
 let j2 = 0
-const step = 0.3;
+const step = 0.7;
 // Controls
 moveForward.addEventListener('click', () => {
     j2++;
@@ -290,10 +289,10 @@ window.addEventListener('keydown', (event) => {
     }
     
     if (event.key === "i") {
-        const [j1, j2, z] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
         arm.setJ1Angle(j1);
         arm.setJ2Angle(j2);
-        arm.setHeight(z);
+        arm.setHeight(height);
     }
     
 });
