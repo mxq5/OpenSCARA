@@ -29,6 +29,12 @@ nav {
     background: url(../graphics/banner.webp) no-repeat center center;
     background-size: cover;
     filter: grayscale(100%);
+    transition: all 0.3s;
+}
+
+.logo:hover {
+    filter: grayscale(0%);
+    transform: scale(1.1);
 }
 
 .nav-tile {
