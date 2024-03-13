@@ -107,21 +107,52 @@ nav {
 }
 
 .controlView__controls {
-    box-sizing: border-box;
-    padding: 50px;
-
-    width: 100%;
-    
-    backdrop-filter: invert(10%);
+    width: 485px;
+    display: grid;
+    grid-template-rows: 150px auto 120px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
-.controlView__controls_buttons {
-    width: 485px;
+.controlView__controls__topbuttons {
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
+    
+}
+
+.controlView__controls__middle {
+    display: grid;
+    grid-template-columns: auto 200px;   
+}
+
+.controlView__controls__middle_left {
+    display: flex;
     flex-wrap: wrap;
-    align-items: start;
+    justify-content: flex-start;
+    align-self: start;
+    gap: 20px 10px;
+}
+
+.controlView__controls__middle_right {
+    display: flex;
+    /*
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 20px;
+    */
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-self: start;
+    gap: 20px 10px;
+}
+
+.controlView__controls__bottom {
+    display: grid;
+    grid-template-columns: auto 100px;   
 }
 
 .controlView__info {
@@ -153,8 +184,15 @@ nav {
     height: 80px;
 
     cursor: pointer;
+    user-select: none;
+    
+    font-size: 1.5em;
 
     transition: all 0.3s;
+}
+
+.wide {
+    width: 170px;
 }
 
 .controlButton:hover {
