@@ -111,18 +111,52 @@ nav {
     padding: 50px;
 
     width: 100%;
-    height: 100%;
     
     backdrop-filter: invert(10%);
 }
 
-.connectView__controls__properties {
+.controlView__controls_buttons {
+    width: 485px;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: start;
+}
+
+.controlView__info {
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+
+.controlView__info table {
+    width: 485px;
+    border: 1px solid var(--default-text-color);
+}
+
+.controlView__info table tr {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.controlView__info table tr td  {
+    width: 50%;
 }
 
 .controlButton {
     background-color: var(--background-color);
     color: var(--default-text-color);
+    border: 2px solid black;
+    border-radius: 5px;
+    width: 80px;
+    height: 80px;
+
+    cursor: pointer;
+
+    transition: all 0.3s;
+}
+
+.controlButton:hover {
+    border: solid 2px var(--default-text-color);
 }
