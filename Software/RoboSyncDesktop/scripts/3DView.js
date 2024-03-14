@@ -154,8 +154,38 @@ class Arm {
     }
 
     setIKIndicatorPosition(x, y, z) {
-        this.IKindicatorModel.position.set(x, y, z);
-        this.render();
+        // TODO: extract interpolation to separate function
+        const parameterPositions = new Float32Array([0, 1]);
+        const sampleValues = new Float32Array(
+        [
+            this.IKIndicator.x, this.IKIndicator.y, this.IKIndicator.z,
+            x, y, z
+        ]);
+
+        const sampleSize = 3;
+        const resultBuffer = new Float32Array(sampleSize);
+
+        const interpolant = new THREE.LinearInterpolant( parameterPositions, sampleValues, sampleSize, resultBuffer );
+        interpolant.evaluate(0.5);
+        
+        const steps = 10;
+        const interpolatedValues = [];
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            interpolant.evaluate(t);
+            interpolatedValues.push([...resultBuffer]);
+        }
+
+        for (let i = 0; i < interpolatedValues.length; i++) {
+            setTimeout(() => {
+                let [nx, ny, nz] = interpolatedValues[i];
+                this.IKindicatorModel.position.set(nx, ny, nz);
+                this.render();
+            }, 10 * i);
+        }
+
+        this.IKIndicator = { x, y, z };
     }
 
     getIKIndicatorPosition() {
@@ -252,11 +282,28 @@ const width = canvas.clientWidth;
 const height = canvas.clientHeight;
 
 // Get controls
-const moveToHome = document.getElementById('moveToHomeButton');
-const moveForward = document.getElementById('af');
-const moveBackward = document.getElementById('ab');
-const moveUp = document.getElementById('au');
-const moveDown = document.getElementById('ad');
+const btn_homeAllAxes = document.getElementById('moveToHomeButton');
+
+const btn_x_home = document.getElementById('x_home');
+const btn_x_plus = document.getElementById('x_plus');
+const btn_x_minus = document.getElementById('x_minus');
+
+const btn_y_home = document.getElementById('y_home');
+const btn_y_plus = document.getElementById('y_plus');
+const btn_y_minus = document.getElementById('y_minus');
+
+const btn_z_home = document.getElementById('z_home');
+const btn_z_plus = document.getElementById('z_plus');
+const btn_z_minus = document.getElementById('z_minus');
+
+const btn_w_home = document.getElementById('w_home');
+const btn_w_plus = document.getElementById('w_plus');
+const btn_w_minus = document.getElementById('w_minus');
+
+const btn_forward = document.getElementById('forward');
+const btn_enter = document.getElementById('enter');
+const btn_gripper = document.getElementById('gripper');
+
 
 // Create a camera
 const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 1000);
@@ -287,39 +334,37 @@ function render() { renderer.render(scene, camera); }
 const arm = new Arm(scene, render);
 
 // Controls
-moveForward.addEventListener('click', () => {
-    arm.transition(
-        arm.joints.J1.angle, 
-        arm.joints.J2.angle + 0.1, 
-        arm.joints.Z.height
-    );
+btn_x_minus.addEventListener('click', () => {
+    arm.setIKIndicatorPosition(arm.IKIndicator.x - 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
-moveBackward.addEventListener('click', () => {
-    arm.transition(
-        arm.joints.J1.angle, 
-        arm.joints.J2.angle - 0.1, 
-        arm.joints.Z.height
-    );
+btn_x_plus.addEventListener('click', () => {
+    arm.setIKIndicatorPosition(arm.IKIndicator.x + 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
-moveUp.addEventListener('click', () => {
-    arm.transition(
-        arm.joints.J1.angle + 0.1, 
-        arm.joints.J2.angle, 
-        arm.joints.Z.height
-    );
+// Z to wysokość, ale three JS twierdzi inaczej
+btn_y_minus.addEventListener('click', () => {
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 0.1);
 });
 
-moveDown.addEventListener('click', () => {
-    arm.transition(
-        arm.joints.J1.angle - 0.1, 
-        arm.joints.J2.angle, 
-        arm.joints.Z.height
-    );
+btn_y_plus.addEventListener('click', () => {
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 0.1);
 });
 
-moveToHome.addEventListener('click', () => {
+btn_z_plus.addEventListener('click', () => {
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 0.1, arm.IKIndicator.z);
+});
+
+btn_z_minus.addEventListener('click', () => {
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 0.1, arm.IKIndicator.z);
+});
+
+btn_forward.addEventListener('click', () => {
+    const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+    arm.transition(j1, j2, height);
+});
+
+btn_homeAllAxes.addEventListener('click', () => {
     arm.transition(0, 0, 0);
 });
 

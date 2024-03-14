@@ -17,11 +17,11 @@
 #define Z_MIN_PIN          18
 #define Z_MAX_PIN          19
 
-#define E_STEP_PIN         26
+#define E_STEP_PIN         26 // E0
 #define E_DIR_PIN          28
 #define E_ENABLE_PIN       24
 
-#define Q_STEP_PIN         36
+#define Q_STEP_PIN         36 // E1
 #define Q_DIR_PIN          34
 #define Q_ENABLE_PIN       30
 
@@ -113,19 +113,8 @@ void loop () {
   digitalWrite(Z_STEP_PIN    , HIGH);
   digitalWrite(E_STEP_PIN    , HIGH);
   digitalWrite(Q_STEP_PIN    , HIGH);
-
-  delay(1);
-
-  digitalWrite(E_STEP_PIN    , LOW);
-  digitalWrite(Q_STEP_PIN    , LOW);
-
   delay(1);
   
-  digitalWrite(E_STEP_PIN    , HIGH);
-  digitalWrite(Q_STEP_PIN    , HIGH);
-
-  delay(1);
-
   digitalWrite(X_STEP_PIN    , LOW);
   digitalWrite(Y_STEP_PIN    , LOW);
   digitalWrite(Z_STEP_PIN    , LOW);
