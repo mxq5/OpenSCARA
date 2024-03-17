@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <pinmap.h>
+#include <string.h>
 
 class OpenSCARA {
   private:
@@ -84,7 +85,13 @@ void setup() {
   // Enable Axis
   digitalWrite(W_ENABLE_PIN, LOW);
 
+  Serial.begin(9600);
+
   OpenSCARA scara;
+
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB
+  }
 }
 
 void spinEveryone() {
@@ -100,6 +107,106 @@ void spinEveryone() {
   delay(1);
 }
 
+String buffer = "";
+
+void SetJ1(int value) {
+  if(value < 0) {
+    digitalWrite(J1_DIR_PIN, HIGH);
+    value = -value;
+  } else {
+    digitalWrite(J1_DIR_PIN, LOW);
+  }
+
+  Serial.println("Setting J1 to: " + String(value));
+
+  for (int i = 0; i < value; i++) {
+    digitalWrite(J1_STEP_PIN, HIGH);
+    delayMicroseconds(400);
+    digitalWrite(J1_STEP_PIN, LOW);
+    delayMicroseconds(400);
+  }
+}
+
+void SetJ2(int value) {
+  if(value < 0) {
+    digitalWrite(J2_DIR_PIN, HIGH);
+    value = -value;
+  } else {
+    digitalWrite(J2_DIR_PIN, LOW);
+  }
+  
+  for (int i = 0; i < value; i++) {
+    digitalWrite(J2_STEP_PIN, HIGH);
+    delayMicroseconds(400);
+    digitalWrite(J2_STEP_PIN, LOW);
+    delayMicroseconds(400);
+  }
+}
+
+void SetJZ(int value) {
+  if(value < 0) {
+    digitalWrite(Z_DIR_PIN, HIGH);
+    value = -value;
+  } else {
+    digitalWrite(Z_DIR_PIN, LOW);
+  }
+
+  for (int i = 0; i < value; i++) {
+    digitalWrite(Z_STEP_PIN, HIGH);
+    delayMicroseconds(400);
+    digitalWrite(Z_STEP_PIN, LOW);
+    delayMicroseconds(400);
+  }
+}
+
+void SetW(int value) {
+  if(value < 0) {
+    digitalWrite(W_DIR_PIN, HIGH);
+    value = -value;
+  } else {
+    digitalWrite(W_DIR_PIN, LOW);
+  }
+
+  for (int i = 0; i < value; i++) {
+    digitalWrite(W_STEP_PIN, HIGH);
+    delayMicroseconds(400);
+    digitalWrite(W_STEP_PIN, LOW);
+    delayMicroseconds(400);
+  }
+}
+
+void parse(String buffer) {
+  uint8_t space = buffer.indexOf(" ");
+  
+  // String builder
+  String command = buffer.substring(0, space);
+  String value = buffer.substring(space + 1);
+
+  if (buffer.startsWith("J1")) {
+    SetJ1(value.toInt());
+  }
+  else if (buffer.startsWith("J2")) {
+    SetJ2(value.toInt());
+  }
+  else if (buffer.startsWith("Z")) {
+    SetJZ(value.toInt());
+  }
+  else if (buffer.startsWith("W")) {
+    SetW(value.toInt());
+  }
+  else {
+    Serial.println("Unknown command");
+  }
+}
+
 void loop () {
-  spinEveryone();
+  if(Serial.available()) {
+    char byte = Serial.read();
+    buffer += byte;
+    if (byte == '\n' || byte == '\r') {
+      Serial.println("Parsing: " + buffer);
+      parse(buffer);
+      buffer = "";
+    }
+  }
 }
