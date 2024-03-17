@@ -123,7 +123,7 @@ class OpenSCARA {
       Z = value;
     }
 
-    void AngleJ1(int angle) {
+    void AngleJ1(float angle) {
       if (J1 == -1) {
         Serial.println("ERR! J1 is not homed yet");
         return; 
@@ -147,7 +147,7 @@ class OpenSCARA {
       J1 = angle;
     }
 
-    void AngleJ2(int angle) {
+    void AngleJ2(float angle) {
       if (J2 == -1) {
         Serial.println("ERR! J2 is not homed yet");
         return; 
@@ -171,7 +171,7 @@ class OpenSCARA {
       J2 = angle;
     }
 
-    void AngleW(int angle) {
+    void AngleW(float angle) {
       if (W == -1) {
         Serial.println("ERR! W is not homed yet");
         return; 
@@ -200,6 +200,110 @@ class OpenSCARA {
       Serial.println("J1: " + String(J1) + " J2: " + String(J2) + " W: " + String(W));
     }
 
+    void linearMove(String value) {
+      uint8_t colon = value.indexOf(":");
+      String J1_string = value.substring(0, colon);
+      String J2_string = value.substring(colon + 1);
+
+      float J1_target_angle = J1_string.toFloat();
+      float J2_target_angle = J2_string.toFloat();
+
+      int J1_steps = calculateAngle(J1_gear_ratio, J1_EndstopOffset, J1_target_angle, J1);
+      int J2_steps = calculateAngle(J2_gear_ratio, J2_EndstopOffset, J2_target_angle, J2);
+
+      if (J1 == -1) {
+        Serial.println("ERR! J1 is not homed yet");
+        return; 
+      }
+
+      if (J1 == J1_target_angle || J1_target_angle < 0) return;
+
+      if (J1_target_angle > (J1max - J1_EndstopOffset)) {
+        Serial.println("ERR! Value is out of range");
+        return;
+      }
+
+      if (J2 == -1) {
+        Serial.println("ERR! J2 is not homed yet");
+        return; 
+      }
+
+      if (J2 == J2_target_angle || J2_target_angle < 0) return;
+
+      if (J2_target_angle > (J2max - J2_EndstopOffset)) {
+        Serial.println("ERR! Value is out of range");
+        return;
+      }
+      
+
+      if (J2_target_angle < J2) {
+        digitalWrite(J2_DIR_PIN, HIGH);
+      } else {
+        digitalWrite(J2_DIR_PIN, LOW);
+      }
+
+      if (J1_target_angle < J1) {
+        digitalWrite(J1_DIR_PIN, HIGH);
+      } else {
+        digitalWrite(J1_DIR_PIN, LOW);
+      }
+      
+      // Oblicz największą liczbę kroków
+      int max_steps = max(J1_steps, J2_steps);
+
+      // Oblicz proporcje kroków dla każdego silnika
+      float J1_step_rate = J1_steps / (float)max_steps;
+      float J2_step_rate = J2_steps / (float)max_steps;
+
+      float J1_accumulator = 0;
+      float J2_accumulator = 0;
+
+      int delay = 300;
+
+      for (int i = 0; i < max_steps; i++) {
+          J1_accumulator += J1_step_rate;
+          J2_accumulator += J2_step_rate;
+
+          if (J1_accumulator >= 1) {
+              digitalWrite(J1_STEP_PIN, HIGH); // Zrób krok silnikiem J1
+              delayMicroseconds(delay);
+              digitalWrite(J1_STEP_PIN, LOW);
+              J1_accumulator -= 1; // Resetuj akumulator
+          }
+
+          if (J2_accumulator >= 1) {
+              digitalWrite(J2_STEP_PIN, HIGH); // Zrób krok silnikiem J2
+              delayMicroseconds(delay);
+              digitalWrite(J2_STEP_PIN, LOW);
+              J2_accumulator -= 1; // Resetuj akumulator
+          }
+      }
+
+      J1 = J1_target_angle;
+      J2 = J2_target_angle;
+    }
+
+    void gripper(int value) {
+      if(value == 1) {
+        digitalWrite(RELAY_1_PIN, LOW);
+        digitalWrite(RELAY_2_PIN, LOW);
+      } else if (value == 0) {
+        digitalWrite(RELAY_1_PIN, HIGH);
+        digitalWrite(RELAY_2_PIN, HIGH);
+      }
+    }
+
+    void tape(int value) {
+      if (value < 0) {
+        digitalWrite(TAPE_DIR_PIN, HIGH);
+      } else {
+        digitalWrite(TAPE_DIR_PIN, LOW);
+      }
+
+      unsigned long steps = abs(value);
+      moveSteps(TAPE_STEP_PIN, steps, 200);
+    }
+
   OpenSCARA() {
     // do some stuff
   }
@@ -208,6 +312,18 @@ class OpenSCARA {
 OpenSCARA scara;
 
 void setup() {
+  // gripper relays 
+  pinMode(RELAY_1_PIN, OUTPUT);
+  pinMode(RELAY_2_PIN, OUTPUT);
+  digitalWrite(RELAY_1_PIN, LOW);
+  digitalWrite(RELAY_2_PIN, LOW);
+  
+  // TAPE
+  pinMode(TAPE_STEP_PIN, OUTPUT);
+  pinMode(TAPE_DIR_PIN, OUTPUT);
+  pinMode(TAPE_ENABLE_PIN, OUTPUT);
+  digitalWrite(TAPE_ENABLE_PIN, LOW); // Enable Axis
+
   // J1
   pinMode(J1_STEP_PIN, OUTPUT);
   pinMode(J1_DIR_PIN, OUTPUT);
@@ -281,8 +397,17 @@ void parse(String buffer) {
   else if (buffer.startsWith("W")) {
     scara.AngleW(value.toInt());
   }
+  else if (buffer.startsWith("GRP")) {
+    scara.gripper(value.toInt());
+  }
   else if (buffer.startsWith("STATUS")) {
     scara.printStatus();
+  }
+  else if (buffer.startsWith("LINEAR")) {
+    scara.linearMove(value);
+  }
+  else if (buffer.startsWith("TP")) {
+    scara.tape(value.toInt());
   }
   else {
     Serial.println("Unknown command");

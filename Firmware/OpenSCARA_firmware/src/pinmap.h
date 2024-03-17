@@ -18,9 +18,9 @@
 #define W_DIR_PIN          34
 #define W_ENABLE_PIN       30
 
-#define E_STEP_PIN         26
-#define E_DIR_PIN          28
-#define E_ENABLE_PIN       24
+#define TAPE_STEP_PIN         26
+#define TAPE_DIR_PIN          28
+#define TAPE_ENABLE_PIN       24
 
 #define SDPOWER            -1
 #define SDSS               53
@@ -42,3 +42,8 @@
 #define J1_MIN_PIN          2
 #define J2_MIN_PIN          14
 #define W_MIN_PIN           15
+
+
+// Relays 
+#define RELAY_1_PIN         47
+#define RELAY_2_PIN         32

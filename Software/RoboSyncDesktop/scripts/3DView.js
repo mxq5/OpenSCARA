@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+const { SerialPort } = require('serialport');
+
+const portcom = 'COM5';
+
 class Arm {
     constructor(scene, render) {
         this.realUnits = {};
@@ -48,6 +52,8 @@ class Arm {
             z: this.joints.gripper.offsets.z - 3
         };
         this.IKindicatorModel = this.spawnIKIndicator();
+
+        this.port = new SerialPort({ path: portcom, baudRate: 9600 })
     }
 
     loadModel(filename) {
@@ -208,8 +214,6 @@ class Arm {
         let gamma = Math.acos(( (c**2 - a**2 - b**2) / (-2 * a * b) ));
         let beta = Math.acos((( b**2 - a**2 - c**2 ) / ( -2 * a * c)));
 
-        // Do tąd jest ok
-
         let alpha = (Math.asin(z/c) - beta);
 
         gamma = Math.PI - gamma;
@@ -304,8 +308,14 @@ const btn_w_minus = document.getElementById('w_minus');
 
 const btn_forward = document.getElementById('forward');
 const btn_enter = document.getElementById('enter');
-const btn_gripper = document.getElementById('gripper');
 
+const grp_left = document.getElementById('grp_left');
+const grp_right = document.getElementById('grp_right');
+const grp_up = document.getElementById('grp_up');
+const grp_down = document.getElementById('grp_down');
+
+const btn_gripper = document.getElementById('gripper');
+let gripperState = false;
 
 // Create a camera
 const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 1000);
@@ -340,6 +350,10 @@ btn_x_minus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x - 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
+btn_x_home.addEventListener('click', () => {
+    arm.port.write('HOMEJ1\n');
+});
+
 btn_x_plus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x + 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
 });
@@ -347,6 +361,10 @@ btn_x_plus.addEventListener('click', () => {
 // Z to wysokość, ale three JS twierdzi inaczej
 btn_y_minus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 0.1);
+});
+
+btn_y_home.addEventListener('click', () => {
+    arm.port.write('HOMEJ2\n');
 });
 
 btn_y_plus.addEventListener('click', () => {
@@ -357,17 +375,79 @@ btn_z_plus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 0.1, arm.IKIndicator.z);
 });
 
+btn_z_home.addEventListener('click', () => {
+    arm.port.write('HOMEZ\n');
+});
+
 btn_z_minus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 0.1, arm.IKIndicator.z);
+});
+
+btn_gripper.addEventListener('click', () => {
+    gripperState = !gripperState;
+    btn_gripper.style.color = gripperState ? 'red' : 'white';
+    arm.port.write(`GRP ${gripperState ? '0' : '1'}\n`);
+});
+
+grp_down.addEventListener('click', () => {
+    arm.joints.gripper.angle -= 45;
+    arm.port.write(`W ${arm.joints.gripper.angle}\n`);
+});
+grp_up.addEventListener('click', () => {
+    arm.joints.gripper.angle += 45;
+    arm.port.write(`W ${arm.joints.gripper.angle}\n`);
+});
+
+grp_left.addEventListener('click', () => {
+    arm.port.write('TP 900\n');
+});
+
+grp_right.addEventListener('click', () => {
+    arm.port.write('TP -900\n');
+});
+
+btn_w_home.addEventListener('click', () => {
+    arm.port.write('HOMEW\n');
+});
+
+let wState = 0;
+btn_w_plus.addEventListener('click', () => {
+    if(wState <= 260) {
+        wState += 10;
+        arm.port.write(`W ${wState}\n`);
+    }
+});
+
+btn_w_minus.addEventListener('click', () => {
+    if(wState >= 10) {
+        wState -= 10;
+        arm.port.write(`W ${wState}\n`);
+    }
 });
 
 btn_forward.addEventListener('click', () => {
     const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
     arm.transition(j1, j2, height);
+    
+    const realj1 = (135 + arm.rtd(j1)).toFixed(0);
+    const realj2 = (135 + arm.rtd(j2)).toFixed(0);
+
+    const serial = `LINEAR ${realj1}:${realj2}\n`;
+
+    console.log(serial);
+    arm.port.write(serial);
+
+    // ¯\_(ツ)_/¯
+    const realSize = 370; //mm
+    const realheight = arm.IKIndicator.y / 10 * realSize;
+    console.log(realheight);
+    arm.port.write(`Z ${realheight}\n`);
 });
 
 btn_homeAllAxes.addEventListener('click', () => {
     arm.transition(0, 0, 0);
+    arm.port.write('HOMEALL\n');
+    console.log('arm homed');
 });
 
 
