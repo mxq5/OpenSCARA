@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 class Arm {
     constructor(scene, render) {
+        this.realUnits = {};
+
         this.joints = {
             Z: {
                 model: null,
