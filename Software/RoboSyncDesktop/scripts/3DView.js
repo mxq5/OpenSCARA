@@ -13,23 +13,24 @@ class Arm {
         this.joints = {
             Z: {
                 model: null,
-                offsets: { x: 0, y: 0.8, z: 0 },
+                offsets: { x: 0, y: 80, z: 0 },
                 height: 0,
             },
             J1: {
                 model: null,
-                offsets: { x: 0, y: 1.1, z: 0 },
+                offsets: { x: 0, y: 120, z: 0 },
                 angle: 0,
-                armlength: 2.9
+                armlength: 298,
             },
             J2: {
                 model: null,
-                offsets: { x: 0, y: 0.7, z: 2.9 },
+                offsets: { x: 0, y: 75, z: 298 },
                 angle: 0,
+                armlength: 248,
             },
             gripper: {
                 model: null,
-                offsets: { x: 0, y: 0.7, z: 6 },
+                offsets: { x: 0, y: 75, z: 6 },
                 angle: 0,
             },
         };
@@ -47,9 +48,9 @@ class Arm {
         this.setupAxes();
 
         this.IKIndicator = { 
-            x: this.joints.gripper.offsets.x - 2, 
-            y: 0 + 2, 
-            z: this.joints.gripper.offsets.z - 3
+            x: 300, 
+            y: 300, 
+            z: 300
         };
         this.IKindicatorModel = this.spawnIKIndicator();
 
@@ -59,7 +60,7 @@ class Arm {
     loadModel(filename) {
         return new Promise((resolve, reject) => {
             this.loader.load(`../models/${filename}.obj`, function(object) {
-                object.scale.set(0.01, 0.01, 0.01);
+                //object.scale.set(0.01, 0.01, 0.01);
                 resolve(object);
             }, undefined, function(error) {
                 reject(error);
@@ -151,7 +152,7 @@ class Arm {
     }
 
     spawnIKIndicator() {
-        const geometry = new THREE.SphereGeometry( 0.1, 32, 32 );
+        const geometry = new THREE.SphereGeometry( 5, 32, 32 );
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const indicatorModel = new THREE.Mesh( geometry, material );
         
@@ -204,9 +205,10 @@ class Arm {
     rtd = (rad) => { return (rad * (180/Math.PI)); }
 
     inverseKinematics(z, y, x) {
-        let a = 2.85;      // J1 arm length
-        let b = 2.45;    
-        let heightOffset = -0.2;
+        let a = this.joints.J1.armlength;      // J1 arm length
+        let b = this.joints.J2.armlength;      // J2 arm length
+        
+        let heightOffset = -20;
         let height = y;
 
         const c = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
@@ -287,6 +289,44 @@ const canvas = document.getElementById('3DView');
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
 
+// Create a camera
+const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 4000);
+
+camera.position.set( 750, 750, 600);
+camera.lookAt( 0, 0, 0 );
+
+// Create a renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(width, height);
+canvas.appendChild(renderer.domElement);
+
+// Create a light that castShadow
+let light = new THREE.DirectionalLight( 0xFFFFFF, 2.0 );
+light.position.set( 0.32, 0.39, 0.7 );
+let ambientLight = new THREE.AmbientLight( 0x7c7c7c, 3.0 );
+scene.add( ambientLight );
+scene.add( light );
+
+// Create a green line from 0, 0, 0 to 0, 65, 0  
+/*
+let material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+let points = [];
+points.push(new THREE.Vector3(0, -1, 0));
+points.push(new THREE.Vector3(0, -1, 65));
+let geometry = new THREE.BufferGeometry().setFromPoints(points);
+let line = new THREE.Line(geometry, material);
+scene.add(line);
+*/
+
+// controls
+let cameraControls = new OrbitControls( camera, renderer.domElement );
+cameraControls.addEventListener( 'change', render );
+
+// Render function
+function render() { renderer.render(scene, camera); }
+
+
+
 // Get controls
 const btn_homeAllAxes = document.getElementById('moveToHomeButton');
 
@@ -316,32 +356,6 @@ const grp_down = document.getElementById('grp_down');
 
 const btn_gripper = document.getElementById('gripper');
 let gripperState = false;
-
-// Create a camera
-const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 1000);
-
-camera.position.set( 5, 5, 12);
-camera.lookAt( 0, 0, 0 );
-
-// Create a renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(width, height);
-canvas.appendChild(renderer.domElement);
-
-// Create a light that castShadow
-let light = new THREE.DirectionalLight( 0xFFFFFF, 2.0 );
-light.position.set( 0.32, 0.39, 0.7 );
-let ambientLight = new THREE.AmbientLight( 0x7c7c7c, 3.0 );
-scene.add( ambientLight );
-scene.add( light );
-
-
-// controls
-let cameraControls = new OrbitControls( camera, renderer.domElement );
-cameraControls.addEventListener( 'change', render );
-
-// Render function
-function render() { renderer.render(scene, camera); }
 
 const arm = new Arm(scene, render);
 
@@ -462,28 +476,22 @@ window.addEventListener('keydown', (event) => {
     }
 
     if(event.key === "w") {
-        arm.IKIndicator.z -= 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
-        console.log(arm.IKIndicator);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 10);
     } else if(event.key === "s") {
-        arm.IKIndicator.z += 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 10);
     } else if(event.key === "a") {
-        arm.IKIndicator.x -= 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x - 10, arm.IKIndicator.y, arm.IKIndicator.z);
     } else if(event.key === "d") {
-        arm.IKIndicator.x += 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x + 10, arm.IKIndicator.y, arm.IKIndicator.z);
     } else if (event.key === "c") {
-        arm.IKIndicator.y += 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 10, arm.IKIndicator.z);
     } else if (event.key === "z") {
-        arm.IKIndicator.y -= 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 10, arm.IKIndicator.z);
     }
     
     if (event.key === "i") {
         const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        console.log(j1, j2, height);
         arm.transition(j1, j2, height);
     } 
 });
