@@ -452,19 +452,12 @@ btn_w_home.addEventListener('click', () => {
     arm.port.write('HOMEW\n');
 });
 
-let wState = 0;
 btn_w_plus.addEventListener('click', () => {
-    if(wState <= 260) {
-        wState += 10;
-        arm.port.write(`W ${wState}\n`);
-    }
+    arm.setGripperAngle(arm.joints.gripper.angle + 10);
 });
 
 btn_w_minus.addEventListener('click', () => {
-    if(wState >= 10) {
-        wState -= 10;
-        arm.port.write(`W ${wState}\n`);
-    }
+    arm.setGripperAngle(arm.joints.gripper.angle - 10);
 });
 
 btn_forward.addEventListener('click', () => {
