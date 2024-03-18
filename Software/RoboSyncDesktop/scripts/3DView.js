@@ -136,7 +136,7 @@ class Arm {
 
         this.render();
 
-        const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
         arm.transition(j1, j2, height);
     }
 
@@ -254,6 +254,8 @@ class Arm {
     rtd = (rad) => { return (rad * (180/Math.PI)); }
 
     inverseKinematics(z, y, x) {
+        if(x < 0) x = 0;
+
         let a = this.joints.J1.armlength;      // J1 arm length
         let b = this.joints.J2.armlength;      // J2 arm length
         
@@ -274,12 +276,15 @@ class Arm {
             gamma = Math.PI * 2 - gamma;
         }
 
+        const realj1 = (135 - arm.rtd(alpha)).toFixed(0);
+        const realj2 = (135 - arm.rtd(gamma)).toFixed(0);
+
         if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
             alert("Żądana pozycja jest poza zasięgiem ramienia!");
-            return [this.joints.J1.angle, this.joints.J2.angle, this.joints.Z.height];
+            return [this.joints.J1.angle, this.joints.J2.angle, realj1, realj2, this.joints.Z.height];
         }
 
-        return [alpha, gamma, height];
+        return [alpha, gamma, realj1, realj2, height];
     }
 
 
@@ -363,6 +368,16 @@ scene.add( light );
 let grid = new THREE.GridHelper( 5000, 50, 0x00ff00, 0x0000ff );
 grid.position.y = -1;
 scene.add( grid );
+
+// create red cube that will be used to demonstrate deadzone
+let cubeGeometry = new THREE.BoxGeometry( 5000, 1250, 2500 );
+let cubeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+cubeMaterial.transparent = true;
+cubeMaterial.opacity = 0.3;
+let cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+cube.position.z = -1250;
+cube.position.y = 1250/2;
+scene.add( cube )
 
 // controls
 let cameraControls = new OrbitControls( camera, renderer.domElement );
@@ -484,15 +499,20 @@ btn_w_minus.addEventListener('click', () => {
 });
 
 btn_forward.addEventListener('click', () => {
-    const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+    const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
     arm.transition(j1, j2, height);
+
+    const serial = `LINEAR ${rj1}:${rj2}\n`;
+    console.log(`
+        simJ1: ${arm.rtd(j1)}
+        rJ1: ${arm.rtd(rj1)}
+        
+        simJ2: ${arm.rtd(j2)}
+        rJ2: ${arm.rtd(rj2)}
+
+        Height: ${height}
+    `);
     
-    const realj1 = (135 + arm.rtd(j1)).toFixed(0);
-    const realj2 = (135 + arm.rtd(j2)).toFixed(0);
-
-    const serial = `LINEAR ${realj1}:${realj2}\n`;
-
-    console.log(serial);
     arm.port.write(serial);
     arm.port.write(`Z ${height}\n`);
 });
@@ -529,7 +549,7 @@ window.addEventListener('keydown', (event) => {
     }
     
     if (event.key === "i") {
-        const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
         console.log(arm.rtd(j1), arm.rtd(j2), height);
         arm.transition(j1, j2, height);
     } 

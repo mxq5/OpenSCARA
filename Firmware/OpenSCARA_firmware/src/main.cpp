@@ -24,8 +24,8 @@ class OpenSCARA {
 
     float X = -1;
     float Y = -1;
+    
     float Z = -1;
-
     float W = -1;
     float J1 = -1;
     float J2 = -1;
