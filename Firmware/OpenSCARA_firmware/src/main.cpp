@@ -41,6 +41,7 @@ class OpenSCARA {
     }
     
     void homeZ() {
+      digitalWrite(Z_DIR_PIN, LOW);
       while(digitalRead(Z_MIN_PIN) == HIGH) {
         // Move Z Up
         moveSteps(Z_STEP_PIN, 20, 50);
