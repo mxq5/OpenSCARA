@@ -78,7 +78,11 @@ class Arm {
                 console.error('Error:', err);
             });
             
+            this.port.on('close', () => {
+                alert("Połączenie z ramieniem zostało przerwane!");
+            });
         });
+        
     }
 
     loadModel(filename) {
@@ -352,17 +356,6 @@ let ambientLight = new THREE.AmbientLight( 0x7c7c7c, 3.0 );
 scene.add( ambientLight );
 scene.add( light );
 
-// Create a green line from 0, 0, 0 to 0, 65, 0  
-/*
-let material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-let points = [];
-points.push(new THREE.Vector3(0, -1, 0));
-points.push(new THREE.Vector3(0, -1, 65));
-let geometry = new THREE.BufferGeometry().setFromPoints(points);
-let line = new THREE.Line(geometry, material);
-scene.add(line);
-*/
-
 // create a grid of lines at y 0 
 let grid = new THREE.GridHelper( 5000, 50, 0x00ff00, 0x0000ff );
 grid.position.y = -1;
@@ -460,11 +453,11 @@ btn_gripper.addEventListener('click', () => {
 
 grp_down.addEventListener('click', () => {
     arm.setGripperAngle(arm.joints.gripper.angle - 10);
-    if(arm.port?.isOpen) arm.port.write(`W ${arm.joints.gripper.angle}\n`);
+    arm.port.write(`W ${arm.joints.gripper.angle}\n`);
 });
 grp_up.addEventListener('click', () => {
     arm.setGripperAngle(arm.joints.gripper.angle + 10);
-    if(arm.port?.isOpen) arm.port.write(`W ${arm.joints.gripper.angle}\n`); 
+    arm.port.write(`W ${arm.joints.gripper.angle}\n`); 
 });
 
 grp_left.addEventListener('click', () => {
