@@ -478,12 +478,7 @@ btn_forward.addEventListener('click', () => {
 
     console.log(serial);
     arm.port.write(serial);
-
-    // ¯\_(ツ)_/¯
-    const realSize = 370; //mm
-    const realheight = arm.IKIndicator.y / 10 * realSize;
-    console.log(realheight);
-    arm.port.write(`Z ${realheight}\n`);
+    arm.port.write(`Z ${height}\n`);
 });
 
 btn_homeAllAxes.addEventListener('click', () => {
