@@ -31,7 +31,7 @@ class Arm {
                 model: null,
                 offsets: { x: 0, y: 75, z: 6 },
                 angle: 0,
-                gripperheight: 20,
+                gripperheight: 0,
                 gripperPhisicalMaxAngle: 270, // 0 - 270
             },
         };
@@ -49,9 +49,9 @@ class Arm {
         this.setupAxes();
 
         this.IKIndicator = { 
-            x: 10, 
-            y: 140, 
-            z: 250
+            x: 0, 
+            y: 0, 
+            z: 100
         };
         this.IKindicatorModel = this.spawnIKIndicator();
 
@@ -266,6 +266,7 @@ class Arm {
             gamma = Math.PI * 2 - gamma;
         }
 
+        console.log(height);
         if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
             alert("Żądana pozycja jest poza zasięgiem ramienia!");
             return [this.joints.J1.angle, this.joints.J2.angle, this.joints.Z.height];
@@ -346,7 +347,7 @@ canvas.appendChild(renderer.domElement);
 
 // Create a light that castShadow
 let light = new THREE.DirectionalLight( 0xFFFFFF, 2.0 );
-light.position.set( 0.32, 0.39, 0.7 );
+light.position.set( 750, 100, 600 );
 let ambientLight = new THREE.AmbientLight( 0x7c7c7c, 3.0 );
 scene.add( ambientLight );
 scene.add( light );
@@ -361,6 +362,11 @@ let geometry = new THREE.BufferGeometry().setFromPoints(points);
 let line = new THREE.Line(geometry, material);
 scene.add(line);
 */
+
+// create a grid of lines at y 0 
+let grid = new THREE.GridHelper( 5000, 50, 0x00ff00, 0x0000ff );
+grid.position.y = -1;
+scene.add( grid );
 
 // controls
 let cameraControls = new OrbitControls( camera, renderer.domElement );
