@@ -15,6 +15,7 @@ class Arm {
                 model: null,
                 offsets: { x: 0, y: 80, z: 0 },
                 height: 0,
+                zPhisicalMaxHeight: (370 - 95), // 0 - 370 (95 is the height of the J1 axis)
             },
             J1: {
                 model: null,
@@ -32,6 +33,8 @@ class Arm {
                 model: null,
                 offsets: { x: 0, y: 75, z: 6 },
                 angle: 0,
+                gripperheight: 20,
+                gripperPhisicalMaxAngle: 270, // 0 - 270
             },
         };
 
@@ -48,9 +51,9 @@ class Arm {
         this.setupAxes();
 
         this.IKIndicator = { 
-            x: 300, 
-            y: 300, 
-            z: 300
+            x: 10, 
+            y: 140, 
+            z: 250
         };
         this.IKindicatorModel = this.spawnIKIndicator();
 
@@ -151,6 +154,14 @@ class Arm {
         this.render();
     }
 
+    setGripperAngle(angle) {
+        if(angle < 0) angle = 0;
+        this.joints.gripper.angle = angle % this.joints.gripper.gripperPhisicalMaxAngle;
+        //this.joints.gripper.model.rotation.set(0, 0, this.joints.gripper.angle);
+        display_wValue.innerText = angle;
+        this.render();
+    }
+
     spawnIKIndicator() {
         const geometry = new THREE.SphereGeometry( 5, 32, 32 );
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -158,6 +169,11 @@ class Arm {
         
         this.scene.add(indicatorModel);
         indicatorModel.position.set(this.IKIndicator.x, this.IKIndicator.y, this.IKIndicator.z);
+
+        display_wValue.innerText = 0;
+        display_xValue.innerText = this.IKIndicator.x;
+        display_yValue.innerText = this.IKIndicator.y;
+        display_zValue.innerText = this.IKIndicator.z;
 
         return indicatorModel;
     }
@@ -194,6 +210,10 @@ class Arm {
             }, 10 * i);
         }
 
+        display_xValue.innerText = x;
+        display_yValue.innerText = y;
+        display_zValue.innerText = z;
+
         this.IKIndicator = { x, y, z };
     }
 
@@ -208,8 +228,8 @@ class Arm {
         let a = this.joints.J1.armlength;      // J1 arm length
         let b = this.joints.J2.armlength;      // J2 arm length
         
-        let heightOffset = -20;
-        let height = y;
+        let heightOffset = -(this.joints.gripper.gripperheight);
+        let height = y + heightOffset;
 
         const c = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
 
@@ -225,7 +245,12 @@ class Arm {
             gamma = Math.PI * 2 - gamma;
         }
 
-        return [alpha, gamma, height + heightOffset];
+        if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
+            alert("Requested position is out of arm range!");
+            return [this.joints.J1.angle, this.joints.J2.angle, this.joints.Z.height];
+        }
+
+        return [alpha, gamma, height];
     }
 
 
@@ -254,8 +279,6 @@ class Arm {
 
         // Wykonanie interpolacji. Używamy 0.5, aby uzyskać wartość środkową między naszymi dwoma punktami próbkami.
         interpolant.evaluate(0.5);
-
-        console.log(resultBuffer);
         
         // Liczba punktów do interpolacji (więcej punktów = gładsza ścieżka)
         const steps = 10;
@@ -354,6 +377,11 @@ const grp_right = document.getElementById('grp_right');
 const grp_up = document.getElementById('grp_up');
 const grp_down = document.getElementById('grp_down');
 
+const display_xValue = document.getElementById('xValue');
+const display_yValue = document.getElementById('yValue');
+const display_zValue = document.getElementById('zValue');
+const display_wValue = document.getElementById('wValue');
+
 const btn_gripper = document.getElementById('gripper');
 let gripperState = false;
 
@@ -361,7 +389,7 @@ const arm = new Arm(scene, render);
 
 // Controls
 btn_x_minus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x - 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x - 10, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
 btn_x_home.addEventListener('click', () => {
@@ -369,12 +397,12 @@ btn_x_home.addEventListener('click', () => {
 });
 
 btn_x_plus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x + 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x + 10, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
 // Z to wysokość, ale three JS twierdzi inaczej
 btn_y_minus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 0.1);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 10);
 });
 
 btn_y_home.addEventListener('click', () => {
@@ -382,11 +410,11 @@ btn_y_home.addEventListener('click', () => {
 });
 
 btn_y_plus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 0.1);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 10);
 });
 
 btn_z_plus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 0.1, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 10, arm.IKIndicator.z);
 });
 
 btn_z_home.addEventListener('click', () => {
@@ -394,7 +422,7 @@ btn_z_home.addEventListener('click', () => {
 });
 
 btn_z_minus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 0.1, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 10, arm.IKIndicator.z);
 });
 
 btn_gripper.addEventListener('click', () => {
@@ -404,12 +432,12 @@ btn_gripper.addEventListener('click', () => {
 });
 
 grp_down.addEventListener('click', () => {
-    arm.joints.gripper.angle -= 45;
-    arm.port.write(`W ${arm.joints.gripper.angle}\n`);
+    arm.setGripperAngle(arm.joints.gripper.angle - 10);
+    if(arm.port?.isOpen) arm.port.write(`W ${arm.joints.gripper.angle}\n`);
 });
 grp_up.addEventListener('click', () => {
-    arm.joints.gripper.angle += 45;
-    arm.port.write(`W ${arm.joints.gripper.angle}\n`);
+    arm.setGripperAngle(arm.joints.gripper.angle + 10);
+    if(arm.port?.isOpen) arm.port.write(`W ${arm.joints.gripper.angle}\n`); 
 });
 
 grp_left.addEventListener('click', () => {
@@ -491,7 +519,7 @@ window.addEventListener('keydown', (event) => {
     
     if (event.key === "i") {
         const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
-        console.log(j1, j2, height);
+        console.log(arm.rtd(j1), arm.rtd(j2), height);
         arm.transition(j1, j2, height);
     } 
 });

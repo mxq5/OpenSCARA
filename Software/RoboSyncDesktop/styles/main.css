@@ -152,7 +152,7 @@ nav {
 
 .controlView__controls__bottom {
     display: grid;
-    grid-template-columns: auto 100px;   
+    grid-template-columns: auto 200px;   
 }
 
 .controlView__info {
@@ -160,19 +160,20 @@ nav {
     box-sizing: border-box;
 }
 
-.controlView__info table {
-    width: 485px;
-    border: 1px solid var(--default-text-color);
+.coordinatesTable {
+    width: 100%;
+    height: 80px;
+    text-align: center;
+    background-color: var(--foreground-color);
+    border: 1px solid var(--foreground-color);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    box-sizing: border-box;
 }
 
-.controlView__info table tr {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
 
-.controlView__info table tr td  {
-    width: 50%;
+.coordinatesTable td, thead {
+    border: 1px solid var(--foreground-color);
 }
 
 .controlButton {
