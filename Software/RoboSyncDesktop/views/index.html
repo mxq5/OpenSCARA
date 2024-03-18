@@ -10,17 +10,17 @@
         <nav>
             <div class="topmenu">
                 <div class="nav-tile logo"></div>
-                <div class="nav-tile" title="Kontroluj">
+                <div class="nav-tile" id="show_control" title="Kontroluj">
                     <span class="material-symbols-outlined">
                         precision_manufacturing
                     </span>
                 </div>
-                <div class="nav-tile" title="Zaprogramuj">
+                <div class="nav-tile" id="show_programming" title="Zaprogramuj">
                     <span class="material-symbols-outlined">
                         data_object
                     </span>
                 </div>
-                <div class="nav-tile" title="Konsola">
+                <div class="nav-tile" id="show_console" title="Konsola">
                     <span class="material-symbols-outlined">
                         terminal
                     </span>
@@ -53,12 +53,28 @@
                 </div>
             </div>
 
+            <div id="programmingView" class="programmingView">
+                <div class="programmingView__wrapper">
+                    <div>
+                        <h1>RoboFlow - edytor kodu</h1>
+                    </div>
+                    <div class="programmingView__form">
+                        <textarea id="editor" class="programmingView__form__code"></textarea>
+                    </div>
+                    <div class="programmingView__buttons">
+                        <button id="btn_import" class="controlButton wide">Otwórz</button>
+                        <button id="btn_save" class="controlButton wide">Zapisz</button>
+                        <button id="btn_compile" class="controlButton ultrawide">Kompiluj</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="controlView" class="controlView">
                 <!-- 3D View -->
                 <div> <div id="3DView" class="controlView__3dView"></div> </div>
                 <!-- - -->
                 <!-- Properties -->
-               <div class="controlView__controls">
+                <div class="controlView__controls">
                     <div class="controlView__controls__topbuttons">
                         <!-- Top buttons -->
                         <button title="Switch motors on/off" class="controlButton" id="ab">
@@ -269,6 +285,8 @@
         }
     </script>
     <script type="module"src="../scripts/3DView.js"></script>
+    <script type="module" src="../scripts/programming.js"></script>
+    <script type="module" src="../scripts/RoboFlow.js"></script>
     <!---->
     
     <script src="../scripts/webMain.js"></script>

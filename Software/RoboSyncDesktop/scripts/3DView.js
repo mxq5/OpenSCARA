@@ -488,6 +488,7 @@ grp_right.addEventListener('click', () => {
 
 btn_w_home.addEventListener('click', () => {
     arm.port.write('HOMEW\n');
+    console.log(window.currentRoboFlowScript);
 });
 
 btn_w_plus.addEventListener('click', () => {

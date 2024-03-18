@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
+    "dev": "electron --devtools .",
     "build": "electron-builder",
     "build:win": "electron-builder --win"
   },
