@@ -4,8 +4,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const { SerialPort } = require('serialport');
 
-const portcom = 'COM5';
-
 class Arm {
     constructor(scene, render) {
         this.realUnits = {};
@@ -57,7 +55,30 @@ class Arm {
         };
         this.IKindicatorModel = this.spawnIKIndicator();
 
-        this.port = new SerialPort({ path: portcom, baudRate: 9600 })
+        // Autoconnect
+        console.log("Connecting to serial port...");
+        SerialPort.list().then((ports) => {
+            if(ports.length === 0) {
+                alert("Nie można połączyć się z ramieniem - brak dostępnych portów COM!");
+            }
+
+            if(ports.length > 1) {
+                alert("Wykryto więcej niż jeden port COM. Wybierz poprawny port w ustawieniach aplikacji.");
+            }
+
+            const portcom = ports[0].path;
+            console.log(portcom);
+            this.port = new SerialPort({ path: portcom, baudRate: 9600 });
+            
+            this.port.on('open', () => {
+                console.log('Port opened');
+            });
+            
+            this.port.on('error', (err) => {
+                console.error('Error:', err);
+            });
+            
+        });
     }
 
     loadModel(filename) {
@@ -246,7 +267,7 @@ class Arm {
         }
 
         if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
-            alert("Requested position is out of arm range!");
+            alert("Żądana pozycja jest poza zasięgiem ramienia!");
             return [this.joints.J1.angle, this.joints.J2.angle, this.joints.Z.height];
         }
 
