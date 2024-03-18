@@ -61,7 +61,7 @@ class OpenSCARA {
       // Move J1 to the left
       digitalWrite(J1_DIR_PIN, HIGH);
       while(digitalRead(J1_MIN_PIN) == HIGH) {
-        moveSteps(J1_STEP_PIN, 20, 400);
+        moveSteps(J1_STEP_PIN, 20, 600);
       }
       digitalWrite(J1_DIR_PIN, LOW);
 
@@ -144,7 +144,7 @@ class OpenSCARA {
       }
 
       int steps = calculateAngle(J1_gear_ratio, J1_EndstopOffset, angle, J1);
-      moveSteps(J1_STEP_PIN, steps, 400);
+      moveSteps(J1_STEP_PIN, steps, 600);
       J1 = angle;
     }
 
@@ -168,7 +168,7 @@ class OpenSCARA {
       }
 
       int steps = calculateAngle(J2_gear_ratio, J2_EndstopOffset, angle, J2);
-      moveSteps(J2_STEP_PIN, steps, 400);
+      moveSteps(J2_STEP_PIN, steps, 600);
       J2 = angle;
     }
 
@@ -259,7 +259,7 @@ class OpenSCARA {
       float J1_accumulator = 0;
       float J2_accumulator = 0;
 
-      int delay = 300;
+      int delay = 500;
 
       for (int i = 0; i < max_steps; i++) {
           J1_accumulator += J1_step_rate;
@@ -269,6 +269,7 @@ class OpenSCARA {
               digitalWrite(J1_STEP_PIN, HIGH); // Zrób krok silnikiem J1
               delayMicroseconds(delay);
               digitalWrite(J1_STEP_PIN, LOW);
+              delayMicroseconds(delay);
               J1_accumulator -= 1; // Resetuj akumulator
           }
 
@@ -276,6 +277,7 @@ class OpenSCARA {
               digitalWrite(J2_STEP_PIN, HIGH); // Zrób krok silnikiem J2
               delayMicroseconds(delay);
               digitalWrite(J2_STEP_PIN, LOW);
+              delayMicroseconds(delay);
               J2_accumulator -= 1; // Resetuj akumulator
           }
       }
@@ -285,10 +287,10 @@ class OpenSCARA {
     }
 
     void gripper(int value) {
-      if(value == 1) {
+      if(value == 0) {
         digitalWrite(RELAY_1_PIN, LOW);
         digitalWrite(RELAY_2_PIN, LOW);
-      } else if (value == 0) {
+      } else if (value == 1) {
         digitalWrite(RELAY_1_PIN, HIGH);
         digitalWrite(RELAY_2_PIN, HIGH);
       }
