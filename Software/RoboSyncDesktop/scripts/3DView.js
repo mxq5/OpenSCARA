@@ -46,14 +46,15 @@ class Arm {
         this.render = render;
         this.loader = new OBJLoader();
         this.scene = scene;
-        this.setupAxes();
 
         this.IKIndicator = { 
             x: 0, 
             y: 0, 
-            z: 100
+            z: 400
         };
         this.IKindicatorModel = this.spawnIKIndicator();
+
+        this.setupAxes();
 
         // Autoconnect
         console.log("Connecting to serial port...");
@@ -134,6 +135,9 @@ class Arm {
         );
 
         this.render();
+
+        const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.transition(j1, j2, height);
     }
 
     setJ1Angle(angle) {
@@ -270,7 +274,6 @@ class Arm {
             gamma = Math.PI * 2 - gamma;
         }
 
-        console.log(height);
         if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
             alert("Żądana pozycja jest poza zasięgiem ramienia!");
             return [this.joints.J1.angle, this.joints.J2.angle, this.joints.Z.height];
@@ -339,7 +342,7 @@ const width = canvas.clientWidth;
 const height = canvas.clientHeight;
 
 // Create a camera
-const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 4000);
+const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 100000);
 
 camera.position.set( 750, 750, 600);
 camera.lookAt( 0, 0, 0 );
