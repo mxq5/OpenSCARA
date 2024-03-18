@@ -152,7 +152,7 @@ nav {
 
 .controlView__controls__bottom {
     display: grid;
-    grid-template-columns: auto 100px;   
+    grid-template-columns: auto 200px;   
 }
 
 .controlView__info {
@@ -160,19 +160,20 @@ nav {
     box-sizing: border-box;
 }
 
-.controlView__info table {
-    width: 485px;
-    border: 1px solid var(--default-text-color);
+.coordinatesTable {
+    width: 100%;
+    height: 80px;
+    text-align: center;
+    background-color: var(--foreground-color);
+    border: 1px solid var(--foreground-color);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    box-sizing: border-box;
 }
 
-.controlView__info table tr {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
 
-.controlView__info table tr td  {
-    width: 50%;
+.coordinatesTable td, thead {
+    border: 1px solid var(--foreground-color);
 }
 
 .controlButton {
@@ -195,6 +196,83 @@ nav {
     width: 170px;
 }
 
+.ultrawide {
+    width: 350px;
+}
+
 .controlButton:hover {
     border: solid 2px var(--default-text-color);
+}
+
+.programmingView {
+    width: 100%;
+    height: 100vh;
+}
+
+.programmingView__wrapper {
+    width: 100%;
+    height: 100vh;
+
+    display: grid;
+    grid-template-rows: 100px auto 100px;
+    user-select: none;
+
+    box-sizing: border-box;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.programmingView__form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.programmingView__form > textarea {
+    width: 100%;
+    height: 100%;
+    background-color: var(--transparent-background);
+    color: var(--default-text-color);
+    border: none;
+    padding: 10px;
+    box-sizing: border-box;
+    resize: none;
+
+    font-family: 'SpaceGrotesk';
+    font-size: 1.5em;
+    line-height: 1.5em;
+    white-space: pre;
+}
+
+textarea:focus {
+    outline: none;
+}
+
+textarea::-webkit-scrollbar {
+    width: 10px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: var(--foreground-color);
+    cursor: default;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-color);
+    border-radius: 10px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-color-hover);
+    cursor: grab;
+}
+
+textarea::-webkit-scrollbar-thumb:active {
+    cursor: grabbing;
+}
+
+.programmingView__buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }

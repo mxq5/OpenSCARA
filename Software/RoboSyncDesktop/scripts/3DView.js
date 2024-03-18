@@ -4,8 +4,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const { SerialPort } = require('serialport');
 
-const portcom = 'COM5';
-
 class Arm {
     constructor(scene, render) {
         this.realUnits = {};
@@ -13,24 +11,28 @@ class Arm {
         this.joints = {
             Z: {
                 model: null,
-                offsets: { x: 0, y: 0.8, z: 0 },
+                offsets: { x: 0, y: 80, z: 0 },
                 height: 0,
+                zPhisicalMaxHeight: (370 - 95), // 0 - 370 (95 is the height of the J1 axis)
             },
             J1: {
                 model: null,
-                offsets: { x: 0, y: 1.1, z: 0 },
+                offsets: { x: 0, y: 120, z: 0 },
                 angle: 0,
-                armlength: 2.9
+                armlength: 298,
             },
             J2: {
                 model: null,
-                offsets: { x: 0, y: 0.7, z: 2.9 },
+                offsets: { x: 0, y: 75, z: 298 },
                 angle: 0,
+                armlength: 248,
             },
             gripper: {
                 model: null,
-                offsets: { x: 0, y: 0.7, z: 6 },
+                offsets: { x: 0, y: 75, z: 6 },
                 angle: 0,
+                gripperheight: 0,
+                gripperPhisicalMaxAngle: 270, // 0 - 270
             },
         };
 
@@ -44,22 +46,50 @@ class Arm {
         this.render = render;
         this.loader = new OBJLoader();
         this.scene = scene;
-        this.setupAxes();
 
         this.IKIndicator = { 
-            x: this.joints.gripper.offsets.x - 2, 
-            y: 0 + 2, 
-            z: this.joints.gripper.offsets.z - 3
+            x: 0, 
+            y: 0, 
+            z: 400
         };
         this.IKindicatorModel = this.spawnIKIndicator();
 
-        this.port = new SerialPort({ path: portcom, baudRate: 9600 })
+        this.setupAxes();
+
+        // Autoconnect
+        console.log("Connecting to serial port...");
+        SerialPort.list().then((ports) => {
+            if(ports.length === 0) {
+                alert("Nie można połączyć się z ramieniem - brak dostępnych portów COM!");
+            }
+
+            if(ports.length > 1) {
+                alert("Wykryto więcej niż jeden port COM. Wybierz poprawny port w ustawieniach aplikacji.");
+            }
+
+            const portcom = ports[0].path;
+            console.log(portcom);
+            this.port = new SerialPort({ path: portcom, baudRate: 9600 });
+            
+            this.port.on('open', () => {
+                console.log('Port opened');
+            });
+            
+            this.port.on('error', (err) => {
+                console.error('Error:', err);
+            });
+            
+            this.port.on('close', () => {
+                alert("Połączenie z ramieniem zostało przerwane!");
+            });
+        });
+        
     }
 
     loadModel(filename) {
         return new Promise((resolve, reject) => {
             this.loader.load(`../models/${filename}.obj`, function(object) {
-                object.scale.set(0.01, 0.01, 0.01);
+                //object.scale.set(0.01, 0.01, 0.01);
                 resolve(object);
             }, undefined, function(error) {
                 reject(error);
@@ -105,6 +135,9 @@ class Arm {
         );
 
         this.render();
+
+        const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.transition(j1, j2, height);
     }
 
     setJ1Angle(angle) {
@@ -150,13 +183,26 @@ class Arm {
         this.render();
     }
 
+    setGripperAngle(angle) {
+        if(angle < 0) angle = 0;
+        this.joints.gripper.angle = angle % this.joints.gripper.gripperPhisicalMaxAngle;
+        //this.joints.gripper.model.rotation.set(0, 0, this.joints.gripper.angle);
+        display_wValue.innerText = angle;
+        this.render();
+    }
+
     spawnIKIndicator() {
-        const geometry = new THREE.SphereGeometry( 0.1, 32, 32 );
+        const geometry = new THREE.SphereGeometry( 5, 32, 32 );
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const indicatorModel = new THREE.Mesh( geometry, material );
         
         this.scene.add(indicatorModel);
         indicatorModel.position.set(this.IKIndicator.x, this.IKIndicator.y, this.IKIndicator.z);
+
+        display_wValue.innerText = 0;
+        display_xValue.innerText = this.IKIndicator.x;
+        display_yValue.innerText = this.IKIndicator.y;
+        display_zValue.innerText = this.IKIndicator.z;
 
         return indicatorModel;
     }
@@ -193,6 +239,10 @@ class Arm {
             }, 10 * i);
         }
 
+        display_xValue.innerText = x;
+        display_yValue.innerText = y;
+        display_zValue.innerText = z;
+
         this.IKIndicator = { x, y, z };
     }
 
@@ -204,10 +254,13 @@ class Arm {
     rtd = (rad) => { return (rad * (180/Math.PI)); }
 
     inverseKinematics(z, y, x) {
-        let a = 2.85;      // J1 arm length
-        let b = 2.45;    
-        let heightOffset = -0.2;
-        let height = y;
+        if(x < 0) x = 0;
+
+        let a = this.joints.J1.armlength;      // J1 arm length
+        let b = this.joints.J2.armlength;      // J2 arm length
+        
+        let heightOffset = -(this.joints.gripper.gripperheight);
+        let height = y + heightOffset;
 
         const c = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
 
@@ -223,7 +276,15 @@ class Arm {
             gamma = Math.PI * 2 - gamma;
         }
 
-        return [alpha, gamma, height + heightOffset];
+        const realj1 = (135 - arm.rtd(alpha)).toFixed(0);
+        const realj2 = (135 - arm.rtd(gamma)).toFixed(0);
+
+        if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
+            alert("Żądana pozycja jest poza zasięgiem ramienia!");
+            return [this.joints.J1.angle, this.joints.J2.angle, realj1, realj2, this.joints.Z.height];
+        }
+
+        return [alpha, gamma, realj1, realj2, height];
     }
 
 
@@ -252,8 +313,6 @@ class Arm {
 
         // Wykonanie interpolacji. Używamy 0.5, aby uzyskać wartość środkową między naszymi dwoma punktami próbkami.
         interpolant.evaluate(0.5);
-
-        console.log(resultBuffer);
         
         // Liczba punktów do interpolacji (więcej punktów = gładsza ścieżka)
         const steps = 10;
@@ -287,6 +346,48 @@ const canvas = document.getElementById('3DView');
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
 
+// Create a camera
+const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 100000);
+
+camera.position.set( 750, 750, 600);
+camera.lookAt( 0, 0, 0 );
+
+// Create a renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(width, height);
+canvas.appendChild(renderer.domElement);
+
+// Create a light that castShadow
+let light = new THREE.DirectionalLight( 0xFFFFFF, 2.0 );
+light.position.set( 750, 100, 600 );
+let ambientLight = new THREE.AmbientLight( 0x7c7c7c, 3.0 );
+scene.add( ambientLight );
+scene.add( light );
+
+// create a grid of lines at y 0 
+let grid = new THREE.GridHelper( 5000, 50, 0x00ff00, 0x0000ff );
+grid.position.y = -1;
+scene.add( grid );
+
+// create red cube that will be used to demonstrate deadzone
+let cubeGeometry = new THREE.BoxGeometry( 5000, 1250, 2500 );
+let cubeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+cubeMaterial.transparent = true;
+cubeMaterial.opacity = 0.3;
+let cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+cube.position.z = -1250;
+cube.position.y = 1250/2;
+scene.add( cube )
+
+// controls
+let cameraControls = new OrbitControls( camera, renderer.domElement );
+cameraControls.addEventListener( 'change', render );
+
+// Render function
+function render() { renderer.render(scene, camera); }
+
+
+
 // Get controls
 const btn_homeAllAxes = document.getElementById('moveToHomeButton');
 
@@ -314,40 +415,19 @@ const grp_right = document.getElementById('grp_right');
 const grp_up = document.getElementById('grp_up');
 const grp_down = document.getElementById('grp_down');
 
+const display_xValue = document.getElementById('xValue');
+const display_yValue = document.getElementById('yValue');
+const display_zValue = document.getElementById('zValue');
+const display_wValue = document.getElementById('wValue');
+
 const btn_gripper = document.getElementById('gripper');
 let gripperState = false;
-
-// Create a camera
-const camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 1000);
-
-camera.position.set( 5, 5, 12);
-camera.lookAt( 0, 0, 0 );
-
-// Create a renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(width, height);
-canvas.appendChild(renderer.domElement);
-
-// Create a light that castShadow
-let light = new THREE.DirectionalLight( 0xFFFFFF, 2.0 );
-light.position.set( 0.32, 0.39, 0.7 );
-let ambientLight = new THREE.AmbientLight( 0x7c7c7c, 3.0 );
-scene.add( ambientLight );
-scene.add( light );
-
-
-// controls
-let cameraControls = new OrbitControls( camera, renderer.domElement );
-cameraControls.addEventListener( 'change', render );
-
-// Render function
-function render() { renderer.render(scene, camera); }
 
 const arm = new Arm(scene, render);
 
 // Controls
 btn_x_minus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x - 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x - 10, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
 btn_x_home.addEventListener('click', () => {
@@ -355,12 +435,12 @@ btn_x_home.addEventListener('click', () => {
 });
 
 btn_x_plus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x + 0.1, arm.IKIndicator.y, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x + 10, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
 // Z to wysokość, ale three JS twierdzi inaczej
 btn_y_minus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 0.1);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 10);
 });
 
 btn_y_home.addEventListener('click', () => {
@@ -368,11 +448,11 @@ btn_y_home.addEventListener('click', () => {
 });
 
 btn_y_plus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 0.1);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 10);
 });
 
 btn_z_plus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 0.1, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 10, arm.IKIndicator.z);
 });
 
 btn_z_home.addEventListener('click', () => {
@@ -380,7 +460,7 @@ btn_z_home.addEventListener('click', () => {
 });
 
 btn_z_minus.addEventListener('click', () => {
-    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 0.1, arm.IKIndicator.z);
+    arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 10, arm.IKIndicator.z);
 });
 
 btn_gripper.addEventListener('click', () => {
@@ -390,12 +470,12 @@ btn_gripper.addEventListener('click', () => {
 });
 
 grp_down.addEventListener('click', () => {
-    arm.joints.gripper.angle -= 45;
+    arm.setGripperAngle(arm.joints.gripper.angle - 10);
     arm.port.write(`W ${arm.joints.gripper.angle}\n`);
 });
 grp_up.addEventListener('click', () => {
-    arm.joints.gripper.angle += 45;
-    arm.port.write(`W ${arm.joints.gripper.angle}\n`);
+    arm.setGripperAngle(arm.joints.gripper.angle + 10);
+    arm.port.write(`W ${arm.joints.gripper.angle}\n`); 
 });
 
 grp_left.addEventListener('click', () => {
@@ -408,40 +488,34 @@ grp_right.addEventListener('click', () => {
 
 btn_w_home.addEventListener('click', () => {
     arm.port.write('HOMEW\n');
+    console.log(window.currentRoboFlowScript);
 });
 
-let wState = 0;
 btn_w_plus.addEventListener('click', () => {
-    if(wState <= 260) {
-        wState += 10;
-        arm.port.write(`W ${wState}\n`);
-    }
+    arm.setGripperAngle(arm.joints.gripper.angle + 10);
 });
 
 btn_w_minus.addEventListener('click', () => {
-    if(wState >= 10) {
-        wState -= 10;
-        arm.port.write(`W ${wState}\n`);
-    }
+    arm.setGripperAngle(arm.joints.gripper.angle - 10);
 });
 
 btn_forward.addEventListener('click', () => {
-    const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+    const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
     arm.transition(j1, j2, height);
+
+    const serial = `LINEAR ${rj1}:${rj2}\n`;
+    console.log(`
+        simJ1: ${arm.rtd(j1)}
+        rJ1: ${arm.rtd(rj1)}
+        
+        simJ2: ${arm.rtd(j2)}
+        rJ2: ${arm.rtd(rj2)}
+
+        Height: ${height}
+    `);
     
-    const realj1 = (135 + arm.rtd(j1)).toFixed(0);
-    const realj2 = (135 + arm.rtd(j2)).toFixed(0);
-
-    const serial = `LINEAR ${realj1}:${realj2}\n`;
-
-    console.log(serial);
     arm.port.write(serial);
-
-    // ¯\_(ツ)_/¯
-    const realSize = 370; //mm
-    const realheight = arm.IKIndicator.y / 10 * realSize;
-    console.log(realheight);
-    arm.port.write(`Z ${realheight}\n`);
+    arm.port.write(`Z ${height}\n`);
 });
 
 btn_homeAllAxes.addEventListener('click', () => {
@@ -462,28 +536,22 @@ window.addEventListener('keydown', (event) => {
     }
 
     if(event.key === "w") {
-        arm.IKIndicator.z -= 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
-        console.log(arm.IKIndicator);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 10);
     } else if(event.key === "s") {
-        arm.IKIndicator.z += 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z + 10);
     } else if(event.key === "a") {
-        arm.IKIndicator.x -= 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x - 10, arm.IKIndicator.y, arm.IKIndicator.z);
     } else if(event.key === "d") {
-        arm.IKIndicator.x += 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x + 10, arm.IKIndicator.y, arm.IKIndicator.z);
     } else if (event.key === "c") {
-        arm.IKIndicator.y += 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y + 10, arm.IKIndicator.z);
     } else if (event.key === "z") {
-        arm.IKIndicator.y -= 0.1;
-        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y - 10, arm.IKIndicator.z);
     }
     
     if (event.key === "i") {
-        const [j1, j2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
+        console.log(arm.rtd(j1), arm.rtd(j2), height);
         arm.transition(j1, j2, height);
     } 
 });
