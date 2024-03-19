@@ -4,14 +4,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const { SerialPort } = require('serialport');
 
-/// CONSOLE HANDLER
-const consoleInput = document.getElementById('console');
-const clearConsole = document.getElementById('btn_clear');
-
-clearConsole.addEventListener('click', () => {
-    consoleInput.innerHTML = '';
-});
-
 class Arm {
     constructor(scene, render) {
         this.realUnits = {};
@@ -568,3 +560,21 @@ window.addEventListener('keydown', (event) => {
         arm.transition(j1, j2, height);
     } 
 });
+
+
+/* SYF section */
+/// CONSOLE HANDLER
+const consoleInput = document.getElementById('console');
+const clearConsole = document.getElementById('btn_clear');
+
+const btn_warning = document.getElementById('btn_warning');
+
+clearConsole.addEventListener('click', () => {
+    consoleInput.innerHTML = '';
+});
+
+btn_warning.addEventListener('click', () => {
+    arm.port.write('STATUS\n');
+});
+
+/* SYF section end */
