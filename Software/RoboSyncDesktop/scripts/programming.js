@@ -31,9 +31,11 @@ btn_save.addEventListener('click', () => {
 
 btn_compile.addEventListener('click', () => {
     const result = RoboFlow.parseScript(editor.value);
-    if (result === false) 
+    if (!result) 
     {
         alert("Błąd kompilacji!");
         return;
+    } else {
+        alert("Kompilacja zakończona sukcesem!");
     }
 });
