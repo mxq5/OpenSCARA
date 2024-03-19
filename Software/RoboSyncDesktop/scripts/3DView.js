@@ -84,7 +84,7 @@ class Arm {
             });
             
             this.port.on('data', (data) => {
-                consoleInput.innerHTML += '<br>', data.toString();
+                consoleInput.innerHTML += ('<br>' + data.toString());
             });
 
             this.port.on('error', (err) => {
