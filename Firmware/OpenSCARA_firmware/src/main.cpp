@@ -96,7 +96,7 @@ class OpenSCARA {
     }
 
     int calculateAngle(float gearRatio, float endstopOffset, float value, float currentPos) {
-      int steps = floor( (gearRatio * (200 * 8)) * abs(currentPos - (value - endstopOffset)) / 360 );
+      int steps = round( (gearRatio * (200 * 8)) * abs(currentPos - (value - endstopOffset)) / 360 );
       return steps;
     }
 
@@ -392,10 +392,10 @@ void parse(String buffer) {
     scara.setZ(value.toInt());
   }
   else if (buffer.startsWith("J1")) {
-    scara.AngleJ1(value.toInt());
+    scara.AngleJ1(value.toFloat());
   }
   else if (buffer.startsWith("J2")) {
-    scara.AngleJ2(value.toInt());
+    scara.AngleJ2(value.toFloat());
   }
   else if (buffer.startsWith("W")) {
     scara.AngleW(value.toInt());

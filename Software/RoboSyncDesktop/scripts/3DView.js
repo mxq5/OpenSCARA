@@ -276,8 +276,8 @@ class Arm {
             gamma = Math.PI * 2 - gamma;
         }
 
-        const realj1 = (135 - arm.rtd(alpha)).toFixed(0);
-        const realj2 = (135 - arm.rtd(gamma)).toFixed(0);
+        const realj1 = (135 - arm.rtd(alpha)).toFixed(6);
+        const realj2 = (135 - arm.rtd(gamma)).toFixed(6);
 
         if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
             alert("Żądana pozycja jest poza zasięgiem ramienia!");
@@ -515,6 +515,7 @@ btn_forward.addEventListener('click', () => {
     `);
     
     arm.port.write(serial);
+    console.log(serial);
     arm.port.write(`Z ${height}\n`);
 });
 
