@@ -4,6 +4,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const { SerialPort } = require('serialport');
 
+/// CONSOLE HANDLER
+const consoleInput = document.getElementById('console');
+const clearConsole = document.getElementById('btn_clear');
+
+clearConsole.addEventListener('click', () => {
+    consoleInput.innerHTML = '';
+});
+
 class Arm {
     constructor(scene, render) {
         this.realUnits = {};
@@ -75,6 +83,10 @@ class Arm {
                 console.log('Port opened');
             });
             
+            this.port.on('data', (data) => {
+                consoleInput.innerHTML += '<br>', data.toString();
+            });
+
             this.port.on('error', (err) => {
                 console.error('Error:', err);
             });
@@ -466,7 +478,7 @@ btn_z_minus.addEventListener('click', () => {
 btn_gripper.addEventListener('click', () => {
     gripperState = !gripperState;
     btn_gripper.style.color = gripperState ? 'red' : 'white';
-    arm.port.write(`GRP ${gripperState ? '0' : '1'}\n`);
+    arm.port.write(`GRP ${gripperState ? '1' : '0'}\n`);
 });
 
 grp_down.addEventListener('click', () => {

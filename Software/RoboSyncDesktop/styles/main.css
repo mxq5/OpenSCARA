@@ -209,7 +209,7 @@ nav {
     height: 100vh;
 }
 
-.programmingView__wrapper {
+.programmingView__wrapper, .consoleView__wrapper {
     width: 100%;
     height: 100vh;
 
@@ -222,13 +222,14 @@ nav {
     padding-right: 20px;
 }
 
-.programmingView__form {
+.programmingView__form, .consoleView__form {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.programmingView__form > textarea {
+.programmingView__form > textarea, 
+.consoleView__form > textarea {
     width: 100%;
     height: 100%;
     background-color: var(--transparent-background);

@@ -10,31 +10,39 @@ const showConsole = document.getElementById('show_console');
 const connectView = document.getElementById('connectView');
 const controlView = document.getElementById('controlView');
 const programmingView = document.getElementById('programmingView');
+const consoleView = document.getElementById('consoleView');
 
-
-window.addEventListener('DOMContentLoaded', () => {
-  connectView.style.display = 'none';
-  controlView.style.display = 'flex';
-  programmingView.style.display = 'none';
-});
 
 connectButton.addEventListener('click', () => {
   //connectView.style.display = 'none';
 });
 
+window.addEventListener('DOMContentLoaded', () => {
+  connectView.style.display = 'none';
+  controlView.style.display = 'flex';
+  programmingView.style.display = 'none';
+  consoleView.style.display = 'none';
+});
 
 showControl.addEventListener('click', () => {
   controlView.style.display = 'flex';
   connectView.style.display = 'none';
   programmingView.style.display = 'none';
+  consoleView.style.display = 'none';
 });
 
 showProgramming.addEventListener('click', () => {
   programmingView.style.display = 'block';
   controlView.style.display = 'none';
   connectView.style.display = 'none';
+  consoleView.style.display = 'none';
+
 });
 
 showConsole.addEventListener('click', () => {
-  console.log("Show console clicked");
+  programmingView.style.display = 'none';
+  controlView.style.display = 'none';
+  connectView.style.display = 'none';
+  consoleView.style.display = 'block';
 });
+
