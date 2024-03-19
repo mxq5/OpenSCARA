@@ -435,7 +435,7 @@ btn_x_minus.addEventListener('click', () => {
 });
 
 btn_x_home.addEventListener('click', () => {
-    write('HOMEJ1\n');
+    arm.port.write('HOMEJ1\n');
 });
 
 btn_x_plus.addEventListener('click', () => {
