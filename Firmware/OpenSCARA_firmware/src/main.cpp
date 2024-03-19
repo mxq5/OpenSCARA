@@ -9,7 +9,7 @@ class OpenSCARA {
 
     // Reduction ratio
     float J1_gear_ratio = 9;
-    float J2_gear_ratio = 8; //6.857; 
+    float J2_gear_ratio = 6.857136; //6.857; 
     float W_gear_ratio = 4;
 
     int Zmax = 370;       // mm
@@ -206,6 +206,8 @@ class OpenSCARA {
       String J1_string = value.substring(0, colon);
       String J2_string = value.substring(colon + 1);
 
+      AngleJ1(J1_string.toFloat());
+      AngleJ2(J2_string.toFloat());
       return;
 
       float J1_target_angle = J1_string.toFloat();
