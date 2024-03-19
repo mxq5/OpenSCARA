@@ -206,6 +206,12 @@ class OpenSCARA {
       String J1_string = value.substring(0, colon);
       String J2_string = value.substring(colon + 1);
 
+
+      AngleJ1(J1_string.toFloat());
+      AngleJ2(J2_string.toFloat());
+
+      return;
+
       float J1_target_angle = J1_string.toFloat();
       float J2_target_angle = J2_string.toFloat();
 
