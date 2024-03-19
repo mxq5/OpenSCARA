@@ -84,7 +84,7 @@ class Arm {
             });
             
             this.port.on('data', (data) => {
-                consoleInput.innerHTML += ('<br>' + data.toString());
+                consoleInput.innerHTML += (data.toString());
             });
 
             this.port.on('error', (err) => {
@@ -443,7 +443,7 @@ btn_x_minus.addEventListener('click', () => {
 });
 
 btn_x_home.addEventListener('click', () => {
-    arm.port.write('HOMEJ1\n');
+    write('HOMEJ1\n');
 });
 
 btn_x_plus.addEventListener('click', () => {
