@@ -483,11 +483,11 @@ grp_up.addEventListener('click', () => {
 });
 
 grp_left.addEventListener('click', () => {
-    arm.port.write('TP 900\n');
+    arm.port.write('TP 3375\n');
 });
 
 grp_right.addEventListener('click', () => {
-    arm.port.write('TP -900\n');
+    arm.port.write('TP -3375\n');
 });
 
 btn_w_home.addEventListener('click', () => {
