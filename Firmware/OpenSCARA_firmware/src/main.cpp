@@ -206,9 +206,9 @@ class OpenSCARA {
       String J1_string = value.substring(0, colon);
       String J2_string = value.substring(colon + 1);
 
-      AngleJ1(J1_string.toFloat());
-      AngleJ2(J2_string.toFloat());
-      return;
+      //AngleJ1(J1_string.toFloat());
+      //AngleJ2(J2_string.toFloat());
+      //return;
 
       float J1_target_angle = J1_string.toFloat();
       float J2_target_angle = J2_string.toFloat();
@@ -263,7 +263,7 @@ class OpenSCARA {
       float J1_accumulator = 0;
       float J2_accumulator = 0;
 
-      int delay = 500;
+      int delay = 800;
 
       for (int i = 0; i < max_steps; i++) {
           J1_accumulator += J1_step_rate;
