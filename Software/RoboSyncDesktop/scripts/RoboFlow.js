@@ -22,9 +22,10 @@ export default class RoboFlow {
                         values.z,
                         values.y,
                     );
+
+                    await this.arm.executeUntilDone(`LINEAR ${rj1}:${rj2}`);
+                    await this.arm.executeUntilDone(`Z ${height}`);
                     this.arm.transition(j1, j2, height);
-                    this.arm.port.write(`LINEAR ${rj1}:${rj2}\n`);
-                    this.arm.port.write(`Z ${height}\n`);
                     break;
 
                 case "WAIT":
@@ -34,16 +35,16 @@ export default class RoboFlow {
 
                 case "HOME":
                     console.log("HOME");
-                    this.arm.port.write(`HOME${values}\n`);
+                    await this.arm.executeUntilDone(`HOME${values}`);
                     break;
                 case "GRIPPER":
                     console.log("GRP");
                     let action = (values === "CLOSE") ? "1" : "0";
-                    this.arm.port.write(`GRP ${action}`);
+                    await this.arm.executeUntilDone(`GRP ${action}`);
                     break;
                 case "ROTGRIP":
                     console.log("ROTGRIP");
-                    this.arm.port.write(`W ${values.rotation}`);
+                    await this.arm.executeUntilDone(`W ${values.rotation}`);
                     break;
                 default:
                     continue;

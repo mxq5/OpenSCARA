@@ -56,6 +56,8 @@ class Arm {
 
         this.setupAxes();
 
+        this.executionFlag = false;
+
         // Autoconnect
         console.log("Connecting to serial port...");
         SerialPort.list().then((ports) => {
@@ -77,6 +79,11 @@ class Arm {
             
             this.port.on('data', (data) => {
                 consoleInput.innerHTML += (data.toString());
+
+                // TODO: Make line below better
+                if(data.toString().includes("_DONE")) {
+                    this.executionFlag = true;
+                }
             });
 
             this.port.on('error', (err) => {
@@ -88,6 +95,22 @@ class Arm {
             });
         });
         
+    }
+
+    async executeUntilDone(command) {
+        return new Promise((resolve, reject) => {
+            this.port.write(`${command}\n`);
+    
+            const checkFlag = () => {
+                if (this.executionFlag) {
+                    resolve();
+                } else {
+                    setTimeout(checkFlag, 100);
+                }
+            };
+    
+            checkFlag();
+        });
     }
 
     loadModel(filename) {
