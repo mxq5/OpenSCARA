@@ -19,8 +19,8 @@ export default class RoboFlow {
                     console.log("MOVE");
                     const [j1, j2, rj1, rj2, height] = this.arm.inverseKinematics(
                         values.x,
-                        values.z,
                         values.y,
+                        values.z,
                     );
 
                     await this.arm.executeUntilDone(`LINEAR ${rj1}:${rj2}`);
@@ -74,8 +74,8 @@ export default class RoboFlow {
                 }
 
                 let x = parts[1];
-                let y = parts[2];
-                let z = parts[3];
+                let y = parts[3];
+                let z = parts[2];
 
                 if(isNaN(x) || isNaN(y) || isNaN(z)) {
                     alert(`Błąd w linii ${i + 1}`);
