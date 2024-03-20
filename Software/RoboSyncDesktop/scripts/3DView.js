@@ -103,6 +103,7 @@ class Arm {
     
             const checkFlag = () => {
                 if (this.executionFlag) {
+                    this.executionFlag = false;
                     resolve();
                 } else {
                     setTimeout(checkFlag, 100);
