@@ -6,8 +6,6 @@ const { SerialPort } = require('serialport');
 
 class Arm {
     constructor(scene, render) {
-        this.realUnits = {};
-
         this.joints = {
             Z: {
                 model: null,
@@ -93,7 +91,6 @@ class Arm {
     loadModel(filename) {
         return new Promise((resolve, reject) => {
             this.loader.load(`../models/${filename}.obj`, function(object) {
-                //object.scale.set(0.01, 0.01, 0.01);
                 resolve(object);
             }, undefined, function(error) {
                 reject(error);
@@ -116,9 +113,6 @@ class Arm {
         this.joints.Z.model = joints[1]; // Z axis
         this.joints.J1.model = joints[2]; // J1 axis
         this.joints.J2.model = joints[3]; // J2 axis
-
-        // Gripper
-        //this.joints.gripper = joints[4].position.set(0, 2.6, 5.3);
 
         this.joints.Z.model.position.set(
             this.joints.Z.offsets.x, 
@@ -159,7 +153,7 @@ class Arm {
             this.joints.J2.offsets.x,
             (this.joints.J2.offsets.y + this.joints.Z.height), 
             this.joints.J2.offsets.z
-            );
+        );
 
         this.render();
     }
@@ -339,7 +333,6 @@ class Arm {
             }, 10 * i);
         }
     }
-
 }
 
 // Create a scene
@@ -389,7 +382,6 @@ cameraControls.addEventListener( 'change', render );
 
 // Render function
 function render() { renderer.render(scene, camera); }
-
 
 
 // Get controls
@@ -442,7 +434,6 @@ btn_x_plus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x + 10, arm.IKIndicator.y, arm.IKIndicator.z);
 });
 
-// Z to wysokość, ale three JS twierdzi inaczej
 btn_y_minus.addEventListener('click', () => {
     arm.setIKIndicatorPosition(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z - 10);
 });
@@ -477,6 +468,7 @@ grp_down.addEventListener('click', () => {
     arm.setGripperAngle(arm.joints.gripper.angle - 10);
     arm.port.write(`W ${arm.joints.gripper.angle}\n`);
 });
+
 grp_up.addEventListener('click', () => {
     arm.setGripperAngle(arm.joints.gripper.angle + 10);
     arm.port.write(`W ${arm.joints.gripper.angle}\n`); 
@@ -562,7 +554,8 @@ window.addEventListener('keydown', (event) => {
 });
 
 
-/* SYF section */
+/* Console section */
+/// TODO: Move it to another file
 /// CONSOLE HANDLER
 const consoleInput = document.getElementById('console');
 const clearConsole = document.getElementById('btn_clear');
@@ -577,4 +570,4 @@ btn_warning.addEventListener('click', () => {
     arm.port.write('STATUS\n');
 });
 
-/* SYF section end */
+/* Console section end */
