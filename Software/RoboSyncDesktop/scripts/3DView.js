@@ -527,14 +527,20 @@ btn_homeAllAxes.addEventListener('click', () => {
 });
 
 btn_start_script.addEventListener('click', () => {
-    const script = localStorage.getItem('currentRoboSyncScript');
-    if(!script) {
+    const script = localStorage.getItem('compiledRoboFlowScript');
+    if(
+        script === undefined ||
+        script === null
+    ) {
         alert("Plik nie został jeszcze skompilowany!");
         return;
     }
 
-    const roboflowInstance = new RoboFlow(arm, script);
+    const roboflowInstance = new RoboFlow(arm);
+    roboflowInstance.run(script);
+    return;
 
+    // I will develop this feature later
     if(scriptRunning) {
         roboflowInstance.stop();
         scriptRunning = false;

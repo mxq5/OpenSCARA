@@ -93,6 +93,7 @@ class OpenSCARA {
       homeZ();
       homeJ1();
       homeJ2();
+      homeW();
     }
 
     int calculateAngle(float gearRatio, float endstopOffset, float value, float currentPos) {

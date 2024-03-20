@@ -16,7 +16,6 @@ btn_import.addEventListener('click', () => {
   ipcRenderer.send('open-file-dialog');
   ipcRenderer.on('selected-file', (event, contents) => {
     editor.value = contents;
-    localStorage.setItem('currentRoboSyncScript', contents);
     console.log(contents);
   });
 });
@@ -31,12 +30,12 @@ btn_save.addEventListener('click', () => {
 
 btn_compile.addEventListener('click', () => {
     const result = RoboFlow.parseScript(editor.value);
-    if (!result) 
+    if (result === false) 
     {
         alert("Błąd kompilacji!");
         return;
     } else {
         alert("Kompilacja zakończona sukcesem!");
-        localStorage.setItem('currentRoboSyncScript', editor.value);
+        localStorage.setItem('compiledRoboFlowScript', result);
     }
 });
