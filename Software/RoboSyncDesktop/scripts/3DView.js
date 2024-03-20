@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const { SerialPort } = require('serialport');
 
+import RoboFlow from './RoboFlow.js';
+
 class Arm {
     constructor(scene, render) {
         this.realUnits = {};
@@ -424,6 +426,9 @@ const display_yValue = document.getElementById('yValue');
 const display_zValue = document.getElementById('zValue');
 const display_wValue = document.getElementById('wValue');
 
+const btn_start_script = document.getElementById('start_script');
+let scriptRunning = false;
+
 const btn_gripper = document.getElementById('gripper');
 let gripperState = false;
 
@@ -529,6 +534,25 @@ btn_homeAllAxes.addEventListener('click', () => {
     console.log('arm homed');
 });
 
+btn_start_script.addEventListener('click', () => {
+    const script = localStorage.getItem('currentRoboSyncScript');
+    if(!script) {
+        alert("Plik nie został jeszcze skompilowany!");
+        return;
+    }
+
+    const roboflowInstance = new RoboFlow(arm, script);
+
+    if(scriptRunning) {
+        roboflowInstance.stop();
+        scriptRunning = false;
+        btn_start_script.innerHTML = '<span class="material-symbols-outlined">not_started</span>';
+    } else {
+        roboflowInstance.run();
+        scriptRunning = true;
+        btn_start_script.innerHTML = '<span class="material-symbols-outlined">pause</span>';
+    }
+});
 
 window.addEventListener('keydown', (event) => {
     if(event.key === "q") {

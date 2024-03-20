@@ -18,7 +18,7 @@ class OpenSCARA {
     int J2max = 270;   // deg
     int Wmax = 270;    // deg
 
-    float J1_EndstopOffset = 3.5; //deg
+    float J1_EndstopOffset = 0; //deg
     float J2_EndstopOffset = 0; //deg
     float W_EndstopOffset = 0; //deg
 

@@ -37,5 +37,6 @@ btn_compile.addEventListener('click', () => {
         return;
     } else {
         alert("Kompilacja zakończona sukcesem!");
+        localStorage.setItem('currentRoboSyncScript', editor.value);
     }
 });
