@@ -24,7 +24,7 @@ class OpenSCARA {
     float homingAcceleration = DEFAULT_ACCELERATION;
     float movementAcceleration = DEFAULT_ACCELERATION;
 
-    float homingSpeed = DEFAULT_MAX_SPEED * 100;
+    float homingSpeed = DEFAULT_MAX_SPEED;
     float movementSpeed = DEFAULT_MAX_SPEED;
 
     // Move single axis by steps
@@ -37,20 +37,22 @@ class OpenSCARA {
         } while (axis.isRunning());
     }
 
-    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, long homingDistance = HOMING_DISTANCE) {
+    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, long homingDistance = HOMING_DISTANCE) {
         if(direction == DIRECTION_CCW) {
             homingDistance = homingDistance * -1;
         }
+
         axis.setCurrentPosition(0);
         axis.setSpeed(homingSpeed);
+
         while(digitalRead(endstopPin) == HIGH) {
             axis.move(homingDistance);
             do {
-                // HOME AXIS WITH CONSTANT SPEED
                 axis.runSpeed();
             }
             while(axis.isRunning());
         }
+        
         axis.setCurrentPosition(0);
         axis.setSpeed(movementSpeed);
         axis.setMaxSpeed(movementSpeed);
@@ -134,23 +136,23 @@ class OpenSCARA {
     }
 
     void homeZ() {
-        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, MOTOR_STEPS_PER_REVOLUTION);
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 10000, MOTOR_STEPS_PER_REVOLUTION);
         Z = 0;
         setZ(100);
     }
 
     void homeJ1() {
-        homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW);
+        homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW, DEFAULT_MAX_SPEED);
         J1 = 0;
     }
 
     void homeJ2() {
-        homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW);
+        homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW, DEFAULT_MAX_SPEED);
         J2 = 0;
     }
 
     void homeW() {
-        homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW);
+        homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW, DEFAULT_MAX_SPEED);
         W = 0;
     }
 
