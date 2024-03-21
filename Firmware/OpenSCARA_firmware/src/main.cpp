@@ -37,7 +37,7 @@ class OpenSCARA {
         } while (axis.isRunning());
     }
 
-    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float speed, long homingDistance = HOMING_DISTANCE) {
+    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float speed = DEFAULT_MAX_SPEED, long homingDistance = HOMING_DISTANCE) {
         // Determine direction of motor rotating
         if(direction == DIRECTION_CCW) {
             homingDistance = homingDistance * -1;
@@ -87,8 +87,8 @@ class OpenSCARA {
             return;
         }
 
-        long steps = static_cast<long>(AXIS_Z.currentPosition() - ((value - Z) /  (AXIS_Z_GEAR_RATIO * MOTOR_STEPS_PER_REVOLUTION)) );
-        
+        long steps = static_cast<long>(AXIS_Z.currentPosition() + ((Z - value) /  (AXIS_Z_GEAR_RATIO * MOTOR_STEPS_PER_REVOLUTION)) );
+        Serial.println("OBLZ: " + String(steps));
         moveAxis(AXIS_Z, steps);
 
         Z = value;
@@ -140,23 +140,23 @@ class OpenSCARA {
     }
 
     void homeZ() {
-        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 20000, MOTOR_STEPS_PER_REVOLUTION);
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 12000);
         Z = 0;
         setZ(100);
     }
 
     void homeJ1() {
-        homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW, DEFAULT_MAX_SPEED);
+        homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW);
         J1 = 0;
     }
 
     void homeJ2() {
-        homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW, DEFAULT_MAX_SPEED);
+        homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW);
         J2 = 0;
     }
 
     void homeW() {
-        homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW, DEFAULT_MAX_SPEED);
+        homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW);
         W = 0;
     }
 
