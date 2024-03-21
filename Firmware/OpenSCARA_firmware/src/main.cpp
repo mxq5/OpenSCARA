@@ -37,8 +37,10 @@ class OpenSCARA {
         } while (axis.isRunning());
     }
 
-    void homeAxis(AccelStepper axis, uint8_t endstopPin, boolean direction, unsigned int homingDistance = HOMING_DISTANCE) {
-        homingDistance *= ( (direction) ? 1 : -1 );
+    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, long homingDistance = HOMING_DISTANCE) {
+        if(direction == DIRECTION_CCW) {
+            homingDistance = homingDistance * -1;
+        }
         axis.setCurrentPosition(0);
         axis.setMaxSpeed(homingSpeed);
         axis.setAcceleration(homingAcceleration);
