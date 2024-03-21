@@ -405,13 +405,13 @@ grid.position.y = -1;
 scene.add( grid );
 
 // create red cube that will be used to demonstrate deadzone
-let cubeGeometry = new THREE.BoxGeometry( 5000, 1250, 2500 );
-let cubeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+let cubeGeometry = new THREE.BoxGeometry( 5000, 2500, 2500 );
+let cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff42F5 } );
 cubeMaterial.transparent = true;
-cubeMaterial.opacity = 0.3;
+cubeMaterial.opacity = 0.2;
 let cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
 cube.position.z = -1250;
-cube.position.y = 1250/2;
+cube.position.y = 2500/2;
 scene.add( cube )
 
 // controls
