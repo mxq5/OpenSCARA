@@ -402,7 +402,6 @@ void parse(String buffer) {
   }
   else if (buffer.startsWith("Z")) {
     scara.setZ(value.toInt());
-    
   }
   else if (buffer.startsWith("J1")) {
     scara.AngleJ1(value.toFloat());

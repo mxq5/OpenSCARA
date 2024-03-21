@@ -33,6 +33,7 @@ class Arm {
                 angle: 0,
                 gripperheight: 0,
                 gripperPhisicalMaxAngle: 270, // 0 - 270
+                isClosed: false
             },
         };
 
@@ -217,6 +218,11 @@ class Arm {
         this.render();
     }
 
+    setGripperState(status) {
+        this.joints.gripper.isClosed = status;
+        this.render();
+    }
+
     spawnIKIndicator() {
         const geometry = new THREE.SphereGeometry( 5, 32, 32 );
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -308,6 +314,10 @@ class Arm {
         if( isNaN(alpha) || isNaN(gamma) || height < 0 || height > this.joints.Z.zPhisicalMaxHeight) {
             alert("Żądana pozycja jest poza zasięgiem ramienia!");
             return [this.joints.J1.angle, this.joints.J2.angle, realj1, realj2, this.joints.Z.height];
+        }
+
+        if(realj1 < 0 || realj2 < 0) {
+            alert("Żądana pozycja jest poza fizycznymi możliwościami zgięcia ramion (j < 0)");
         }
 
         return [alpha, gamma, realj1, realj2, height];
@@ -409,7 +419,10 @@ let cameraControls = new OrbitControls( camera, renderer.domElement );
 cameraControls.addEventListener( 'change', render );
 
 // Render function
-function render() { renderer.render(scene, camera); }
+function render() {
+    btn_gripper.style.color = arm.joints.gripper.isClosed ? 'red' : 'white';
+    renderer.render(scene, camera); 
+}
 
 
 // Get controls
@@ -444,11 +457,11 @@ const display_yValue = document.getElementById('yValue');
 const display_zValue = document.getElementById('zValue');
 const display_wValue = document.getElementById('wValue');
 
+const btn_start_headless = document.getElementById('headless_start');
 const btn_start_script = document.getElementById('start_script');
 let scriptRunning = false;
 
 const btn_gripper = document.getElementById('gripper');
-let gripperState = false;
 
 const arm = new Arm(scene, render);
 
@@ -490,9 +503,8 @@ btn_z_minus.addEventListener('click', () => {
 });
 
 btn_gripper.addEventListener('click', () => {
-    gripperState = !gripperState;
-    btn_gripper.style.color = gripperState ? 'red' : 'white';
-    arm.port.write(`GRP ${gripperState ? '1' : '0'}\n`);
+    arm.setGripperState(!arm.joints.gripper.isClosed);
+    arm.port.write(`GRP ${arm.joints.gripper.isClosed ? '1' : '0'}\n`);
 });
 
 grp_down.addEventListener('click', () => {
@@ -576,6 +588,20 @@ btn_start_script.addEventListener('click', () => {
         scriptRunning = true;
         btn_start_script.innerHTML = '<span class="material-symbols-outlined">pause</span>';
     }
+});
+
+btn_start_headless.addEventListener('click', () => {
+    const script = localStorage.getItem('compiledRoboFlowScript');
+    if(
+        script === undefined ||
+        script === null
+    ) {
+        alert("Plik nie został jeszcze skompilowany!");
+        return;
+    }
+
+    const roboflowInstance = new RoboFlow(arm);
+    roboflowInstance.run(script, true);
 });
 
 window.addEventListener('keydown', (event) => {

@@ -9,22 +9,32 @@ export default class RoboFlow {
         return new Promise(resolve => setTimeout(resolve, delay*1000));
     }
 
-    async run(compiled) {
+    async run(compiled, headless = false) {
         const instructions = JSON.parse(compiled);
+
         for(let i = 0; i < instructions.length; i++) {
             const instruction = instructions[i].instruction;
             const values = instructions[i].values;
+
+            // Add delay in hedless mode for slower animation
+            if(headless) await this.delay(1);
+
             switch(instruction) {
                 case "MOVE":
-                    console.log("MOVE");
+                    console.log("MOVE", values);
                     const [j1, j2, rj1, rj2, height] = this.arm.inverseKinematics(
                         parseFloat(values.x),
                         parseFloat(values.y),
                         parseFloat(values.z),
                     );
+                    
+                    console.log(rj1, rj2);
 
-                    await this.arm.executeUntilDone(`LINEAR ${rj1}:${rj2}`);
-                    await this.arm.executeUntilDone(`Z ${height}`);
+                    if(!headless) {
+                        await this.arm.executeUntilDone(`LINEAR ${rj1}:${rj2}`);
+                        await this.arm.executeUntilDone(`Z ${height}`);
+                    }
+
                     this.arm.transition(j1, j2, height);
                     break;
 
@@ -34,17 +44,18 @@ export default class RoboFlow {
                     break;
 
                 case "HOME":
-                    console.log("HOME");
-                    await this.arm.executeUntilDone(`HOME${values}`);
+                    console.log("HOME", values);
+                    if(!headless) await this.arm.executeUntilDone(`HOME${values}`);
                     break;
                 case "GRIPPER":
-                    console.log("GRP");
+                    console.log("GRP", values);
                     let action = (values === "CLOSE") ? "1" : "0";
-                    await this.arm.executeUntilDone(`GRP ${action}`);
+                    this.arm.setGripperState((values === "CLOSE") ? true : false);
+                    if(!headless) await this.arm.executeUntilDone(`GRP ${action}`);
                     break;
                 case "ROTGRIP":
-                    console.log("ROTGRIP");
-                    await this.arm.executeUntilDone(`W ${values.rotation}`);
+                    console.log("ROTGRIP", values.rotation);
+                    if(!headless) await this.arm.executeUntilDone(`W ${values.rotation}`);
                     break;
                 default:
                     continue;
