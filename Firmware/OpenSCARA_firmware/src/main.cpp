@@ -29,7 +29,7 @@ class OpenSCARA {
 
     // Move single axis by steps
     void moveAxis(AccelStepper axis, unsigned long position) {
-        axis.setSpeed(movementSpeed);
+        axis.setMaxSpeed(movementSpeed);
         axis.setAcceleration(movementAcceleration);
         axis.moveTo(position);
         do {
@@ -40,7 +40,7 @@ class OpenSCARA {
     void homeAxis(AccelStepper axis, uint8_t endstopPin, boolean direction) {
         uint8_t homingDistance = HOMING_DISTANCE * ( (direction) ? 1 : -1 );
         axis.setCurrentPosition(0);
-        axis.setSpeed(homingSpeed);
+        axis.setMaxSpeed(homingSpeed);
         axis.setAcceleration(homingAcceleration);
         while(digitalRead(endstopPin) == HIGH) {
             axis.move(homingDistance);
@@ -50,7 +50,7 @@ class OpenSCARA {
             while(axis.isRunning());
         }
         axis.setCurrentPosition(0);
-        axis.setSpeed(movementSpeed);
+        axis.setMaxSpeed(movementSpeed);
         axis.setAcceleration(movementAcceleration);
         delay(500);
     }
@@ -200,10 +200,10 @@ class OpenSCARA {
         long J2_steps = calculateAngularSteps(AXIS_J2, J2, J2_target_angle, AXIS_J2_GEAR_RATIO);
 
         AXIS_J1.setAcceleration(movementAcceleration);
-        AXIS_J1.setSpeed(movementSpeed);
+        AXIS_J1.setMaxSpeed(movementSpeed);
 
         AXIS_J1.setAcceleration(movementAcceleration);
-        AXIS_J2.setSpeed(movementSpeed);
+        AXIS_J2.setMaxSpeed(movementSpeed);
 
         AXIS_J1.moveTo(J1_steps);
         AXIS_J2.moveTo(J2_steps);
