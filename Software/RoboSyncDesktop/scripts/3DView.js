@@ -98,14 +98,16 @@ class Arm {
     }
 
     async executeUntilDone(command) {
+        let iterations = 0;
         return new Promise((resolve, reject) => {
             this.port.write(`${command}\n`);
     
             const checkFlag = () => {
-                if (this.executionFlag) {
+                if (this.executionFlag || iterations > 100) {
                     this.executionFlag = false;
                     resolve();
                 } else {
+                    iterations++;
                     setTimeout(checkFlag, 100);
                 }
             };
