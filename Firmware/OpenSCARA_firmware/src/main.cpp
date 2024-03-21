@@ -134,7 +134,7 @@ class OpenSCARA {
     }
 
     void homeZ() {
-        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 1200);
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, MOTOR_STEPS_PER_REVOLUTION);
         Z = 0;
         setZ(100);
     }
