@@ -18,9 +18,9 @@ export default class RoboFlow {
                 case "MOVE":
                     console.log("MOVE");
                     const [j1, j2, rj1, rj2, height] = this.arm.inverseKinematics(
-                        values.x,
-                        values.y,
-                        values.z,
+                        parseFloat(values.x),
+                        parseFloat(values.y),
+                        parseFloat(values.z),
                     );
 
                     await this.arm.executeUntilDone(`LINEAR ${rj1}:${rj2}`);
