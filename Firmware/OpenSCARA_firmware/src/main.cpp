@@ -24,7 +24,7 @@ class OpenSCARA {
     float homingAcceleration = DEFAULT_ACCELERATION;
     float movementAcceleration = DEFAULT_ACCELERATION;
 
-    float homingSpeed = DEFAULT_MAX_SPEED;
+    float homingSpeed = DEFAULT_MAX_SPEED * 100;
     float movementSpeed = DEFAULT_MAX_SPEED;
 
     // Move single axis by steps
