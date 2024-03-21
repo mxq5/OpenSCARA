@@ -103,7 +103,7 @@ class Arm {
             this.port.write(`${command}\n`);
     
             const checkFlag = () => {
-                if (this.executionFlag || iterations > 100) {
+                if (this.executionFlag || iterations > 50) {
                     this.executionFlag = false;
                     resolve();
                 } else {
