@@ -452,6 +452,9 @@ const grp_right = document.getElementById('grp_right');
 const grp_up = document.getElementById('grp_up');
 const grp_down = document.getElementById('grp_down');
 
+const btn_speed_control = document.getElementById('speed_control');
+let currentSpeed = 0;
+
 const display_xValue = document.getElementById('xValue');
 const display_yValue = document.getElementById('yValue');
 const display_zValue = document.getElementById('zValue');
@@ -602,6 +605,19 @@ btn_start_headless.addEventListener('click', () => {
 
     const roboflowInstance = new RoboFlow(arm);
     roboflowInstance.run(script, true);
+});
+
+btn_speed_control.addEventListener('click', () => {
+    currentSpeed++;
+
+    const letter = ["S", "M", "F"];
+    if(currentSpeed == 3) currentSpeed = 0;
+
+    btn_speed_control.innerHTML = `<span class="material-symbols-outlined"> stat_${currentSpeed + 1} </span> ${letter[currentSpeed]}`;
+    const baseSpeed = 1000;
+    const newSpeed = baseSpeed * (currentSpeed + 1);
+
+    arm.port.write(`SETSPEED ${newSpeed}\n`);
 });
 
 window.addEventListener('keydown', (event) => {
