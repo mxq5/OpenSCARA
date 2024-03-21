@@ -94,7 +94,7 @@ class OpenSCARA {
       homeJ1();
       homeJ2();
       homeW();
-      Serial.println("_DONE");
+      
     }
 
     int calculateAngle(float gearRatio, float endstopOffset, float value, float currentPos) {
@@ -124,7 +124,7 @@ class OpenSCARA {
       unsigned long steps = static_cast<unsigned long>((abs(Z - value)) /  Z_screwPitch) * 200 * 8;
       moveSteps(Z_STEP_PIN, steps, 50);
       Z = value;
-      Serial.println("_DONE");
+      
     }
 
     void AngleJ1(float angle) {
@@ -149,7 +149,7 @@ class OpenSCARA {
       int steps = calculateAngle(J1_gear_ratio, J1_EndstopOffset, angle, J1);
       moveSteps(J1_STEP_PIN, steps, 600);
       J1 = angle;
-      Serial.println("_DONE");
+      
     }
 
     void AngleJ2(float angle) {
@@ -174,7 +174,7 @@ class OpenSCARA {
       int steps = calculateAngle(J2_gear_ratio, J2_EndstopOffset, angle, J2);
       moveSteps(J2_STEP_PIN, steps, 600);
       J2 = angle;
-      Serial.println("_DONE");
+      
     }
 
     void AngleW(float angle) {
@@ -199,7 +199,7 @@ class OpenSCARA {
       int steps = calculateAngle(W_gear_ratio, W_EndstopOffset, angle, W);
       moveSteps(W_STEP_PIN, steps, 400);
       W = angle;
-      Serial.println("_DONE");
+      
     }
 
     void printStatus() {
@@ -294,7 +294,6 @@ class OpenSCARA {
 
       J1 = J1_target_angle;
       J2 = J2_target_angle;
-      Serial.println("_DONE");
     }
 
     void gripper(int value) {
@@ -305,7 +304,7 @@ class OpenSCARA {
         digitalWrite(RELAY_1_PIN, HIGH);
         digitalWrite(RELAY_2_PIN, HIGH);
       }
-      Serial.println("_DONE");
+      
     }
 
     void tape(int value) {
@@ -317,7 +316,7 @@ class OpenSCARA {
 
       unsigned long steps = abs(value);
       moveSteps(TAPE_STEP_PIN, steps, 200);
-      Serial.println("_DONE");
+      
     }
 
   OpenSCARA() {
@@ -391,23 +390,19 @@ void parse(String buffer) {
   }
   else if (buffer.startsWith("HOMEZ")) {
     scara.homeZ();
-    Serial.println("_DONE");
   }
   else if (buffer.startsWith("HOMEJ1")) {
     scara.homeJ1();
-    Serial.println("_DONE");
   }
   else if (buffer.startsWith("HOMEJ2")) {
     scara.homeJ2();
-    Serial.println("_DONE");
   }
   else if (buffer.startsWith("HOMEW")) {
     scara.homeW();
-    Serial.println("_DONE");
   }
   else if (buffer.startsWith("Z")) {
     scara.setZ(value.toInt());
-    Serial.println("_DONE");
+    
   }
   else if (buffer.startsWith("J1")) {
     scara.AngleJ1(value.toFloat());
@@ -433,6 +428,7 @@ void parse(String buffer) {
   else {
     Serial.println("Unknown command");
   }
+  Serial.println("_DONE");
 }
 
 String buffer = "";
