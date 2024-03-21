@@ -42,16 +42,17 @@ class OpenSCARA {
             homingDistance = homingDistance * -1;
         }
         axis.setCurrentPosition(0);
-        axis.setMaxSpeed(homingSpeed);
-        axis.setAcceleration(homingAcceleration);
+        axis.setSpeed(homingSpeed);
         while(digitalRead(endstopPin) == HIGH) {
             axis.move(homingDistance);
             do {
-                axis.run();
+                // HOME AXIS WITH CONSTANT SPEED
+                axis.runSpeed();
             }
             while(axis.isRunning());
         }
         axis.setCurrentPosition(0);
+        axis.setSpeed(movementSpeed);
         axis.setMaxSpeed(movementSpeed);
         axis.setAcceleration(movementAcceleration);
         delay(500);
@@ -80,8 +81,7 @@ class OpenSCARA {
             return;
         }
 
-        long currentStepsPosition = AXIS_Z.currentPosition();
-        long steps = static_cast<long>( currentStepsPosition + ((Z - value) /  AXIS_Z_GEAR_RATIO * MOTOR_STEPS_PER_REVOLUTION) );
+        long steps = static_cast<long>(AXIS_Z.currentPosition() - ((value - Z) /  (AXIS_Z_GEAR_RATIO * MOTOR_STEPS_PER_REVOLUTION)) );
         
         moveAxis(AXIS_Z, steps);
 
@@ -134,9 +134,9 @@ class OpenSCARA {
     }
 
     void homeZ() {
-      homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 10000);
-      Z = 0;
-      setZ(100);
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 1200);
+        Z = 0;
+        setZ(100);
     }
 
     void homeJ1() {
