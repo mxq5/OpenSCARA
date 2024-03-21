@@ -4,7 +4,7 @@
 #define AXIS_Z_GEAR_RATIO   2
 #define AXIS_J1_GEAR_RATIO  9
 #define AXIS_J2_GEAR_RATIO  6.857136
-#define AXIS_W_GEAR_RATIO   6.857136
+#define AXIS_W_GEAR_RATIO   4
 
 #define AXIS_Z_MAX_VALUE    370
 #define AXIS_Z_AXIS_HEIGHT  95
