@@ -53,10 +53,7 @@ class OpenSCARA {
         // Move until endstop activation
         while(digitalRead(endstopPin) == HIGH) {
             axis.move(homingDistance);
-            do {
-                axis.runSpeedToPosition();
-            }
-            while(axis.isRunning());
+            axis.runSpeedToPosition();
         }
 
         // If endstop clicked, set current position as 0, and set acceleration setting 
