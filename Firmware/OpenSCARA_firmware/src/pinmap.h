@@ -47,3 +47,7 @@
 // Relays 
 #define RELAY_1_PIN         47
 #define RELAY_2_PIN         32
+
+// Direction 
+#define DIRECTION_CCW   0
+#define DIRECTION_CW    1

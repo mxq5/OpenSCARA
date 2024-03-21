@@ -518,11 +518,11 @@ grp_up.addEventListener('click', () => {
 });
 
 grp_left.addEventListener('click', () => {
-    arm.port.write('TP 3375\n');
+    arm.port.write('TAPE0 3375\n');
 });
 
 grp_right.addEventListener('click', () => {
-    arm.port.write('TP -3375\n');
+    arm.port.write('TAPE0 -3375\n');
 });
 
 btn_w_home.addEventListener('click', () => {
@@ -542,7 +542,7 @@ btn_forward.addEventListener('click', () => {
     const [j1, j2, rj1, rj2, height] = arm.inverseKinematics(arm.IKIndicator.x, arm.IKIndicator.y, arm.IKIndicator.z);
     arm.transition(j1, j2, height);
 
-    const serial = `LINEAR ${rj1}:${rj2}\n`;
+    const serial = `SIMULTANEOUS${rj1}:${rj2}\n`;
     console.log(`
         simJ1: ${arm.rtd(j1)}
         rJ1: ${arm.rtd(rj1)}

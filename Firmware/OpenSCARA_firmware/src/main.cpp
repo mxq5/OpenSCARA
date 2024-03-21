@@ -1,299 +1,220 @@
 #include <Arduino.h>
-#include <pinmap.h>
+#include <AccelStepper/AccelStepper.h>
 #include <string.h>
+
+#include <pinmap.h>
+#include <configuration.h>
+
+AccelStepper AXIS_Z     (AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
+AccelStepper AXIS_J1    (AccelStepper::DRIVER, J1_STEP_PIN, J1_DIR_PIN);
+AccelStepper AXIS_J2    (AccelStepper::DRIVER, J2_STEP_PIN, J2_DIR_PIN);
+AccelStepper AXIS_W     (AccelStepper::DRIVER, W_STEP_PIN, W_DIR_PIN);
+AccelStepper AXIS_TAPE  (AccelStepper::DRIVER, TAPE_STEP_PIN, TAPE_DIR_PIN);
 
 class OpenSCARA {
   public:
-    // Available screws: t8x8, t8x2
-    uint8_t Z_screwPitch = 2;
-
-    // Reduction ratio
-    float J1_gear_ratio = 9;
-    float J2_gear_ratio = 6.857136; //6.857; 
-    float W_gear_ratio = 4;
-
-    int Zmax = 370;       // mm
-    int ZHeight = 95;     // mm
-    int J1max = 270;   // deg
-    int J2max = 270;   // deg
-    int Wmax = 270;    // deg
-
-    float J1_EndstopOffset = 0; //deg
-    float J2_EndstopOffset = 0; //deg
-    float W_EndstopOffset = 0; //deg
-
-    float X = -1;
-    float Y = -1;
-    
     float Z = -1;
     float W = -1;
     float J1 = -1;
     float J2 = -1;
 
+    long tape0 = 0;
+    long tape1 = 0;
+
+    float homingAcceleration = DEFAULT_ACCELERATION;
+    float movementAcceleration = DEFAULT_ACCELERATION;
+
+    float homingSpeed = DEFAULT_MAX_SPEED;
+    float movementSpeed = DEFAULT_MAX_SPEED;
+
     // Move single axis by steps
-    void moveSteps(uint8_t axis, unsigned long steps, int delay = 300) {
-      for(unsigned long i = 0; i < steps; i++) {
-        digitalWrite(axis, HIGH);
-        delayMicroseconds(delay);
-        digitalWrite(axis, LOW);
-        delayMicroseconds(delay);
-      }
+    void moveAxis(AccelStepper axis, unsigned long position) {
+        axis.setSpeed(movementSpeed);
+        axis.setAcceleration(movementAcceleration);
+        axis.moveTo(position);
+        do {
+            axis.run();
+        } while (axis.isRunning());
+    }
+
+    void homeAxis(AccelStepper axis, uint8_t endstopPin, boolean direction) {
+        uint8_t homingDistance = HOMING_DISTANCE * ( (direction) ? 1 : -1 );
+        axis.setCurrentPosition(0);
+        axis.setSpeed(homingSpeed);
+        axis.setAcceleration(homingAcceleration);
+        while(digitalRead(endstopPin) == HIGH) {
+            axis.move(homingDistance);
+            do {
+                axis.run();
+            }
+            while(axis.isRunning());
+        }
+        axis.setCurrentPosition(0);
+        axis.setSpeed(movementSpeed);
+        axis.setAcceleration(movementAcceleration);
+        delay(500);
+    }
+
+    long calculateAngularSteps(AccelStepper axis, float currentAngle, float targetAngle, float gearRatio) {
+        return round(axis.currentPosition() - (gearRatio * MOTOR_STEPS_PER_REVOLUTION * (targetAngle - currentAngle) / 360.0));
+    }
+
+    float moveAngularAxis(AccelStepper axis, float currentAngle, float targetAngle, float gearRatio) {
+        long stepsPosition = calculateAngularSteps(axis, currentAngle, targetAngle, gearRatio);
+        moveAxis(axis, stepsPosition);
+        return targetAngle;
     }
     
-    void homeZ() {
-      digitalWrite(Z_DIR_PIN, LOW);
-      while(digitalRead(Z_MIN_PIN) == HIGH) {
-        // Move Z Up
-        moveSteps(Z_STEP_PIN, 20, 50);
-      }
-      delay(500);
-      digitalWrite(Z_DIR_PIN, HIGH);
-      
-      // Length of axis - Height of axis / pitch of screw * 200 steps per revolution * 8 microsteps 
-      uint8_t offset = 100;
-      unsigned long steps = static_cast<unsigned long>((Zmax - ZHeight - offset) /  Z_screwPitch) * 200 * 8;
-
-      moveSteps(Z_STEP_PIN, steps, 50);
-      Z = offset;
-    }
-
-    void homeJ1() {
-      // Move J1 to the left
-      digitalWrite(J1_DIR_PIN, HIGH);
-      while(digitalRead(J1_MIN_PIN) == HIGH) {
-        moveSteps(J1_STEP_PIN, 20, 600);
-      }
-      digitalWrite(J1_DIR_PIN, LOW);
-
-      J1 = 0;
-    }
-
-    void homeJ2() {
-      // Move J2 to the left
-      digitalWrite(J2_DIR_PIN, HIGH);
-      while(digitalRead(J2_MIN_PIN) == HIGH) {
-        moveSteps(J2_STEP_PIN, 20, 700);
-      }
-      digitalWrite(J2_DIR_PIN, LOW);
-
-      J2 = 0;
-    }
-
-    void homeW() {
-      digitalWrite(W_DIR_PIN, HIGH);
-      while(digitalRead(W_MIN_PIN) == HIGH) {
-        moveSteps(W_STEP_PIN, 300);
-      }
-      digitalWrite(W_DIR_PIN, LOW);
-
-      W = 0;
-    }
-
-    void homeAll() {
-      homeZ();
-      homeJ1();
-      homeJ2();
-      homeW();
-      
-    }
-
-    int calculateAngle(float gearRatio, float endstopOffset, float value, float currentPos) {
-      int steps = round( (gearRatio * (200 * 8)) * abs(currentPos - (value - endstopOffset)) / 360 );
-      return steps;
-    }
-
     void setZ(int value) {
-      if (Z == -1) {
-        Serial.println("ERR! Z is not homed yet");
-        return; 
-      }
+        if (Z == -1) {
+            Serial.println("ERR! Z is not homed yet");
+            return; 
+        }
 
-      if (Z == value || value < 0) return;
+        if (Z == value || value < 0) return;
 
-      if (value > (Zmax - ZHeight)) {
-        Serial.println("ERR! Z is out of range");
-        return;
-      }
+        if (value > (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT)) {
+            Serial.println("ERR! Z is out of range");
+            return;
+        }
 
-      if (value < Z) {
-        digitalWrite(Z_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(Z_DIR_PIN, LOW);
-      }
+        long currentStepsPosition = AXIS_Z.currentPosition();
+        long steps = static_cast<long>( currentStepsPosition + ((Z - value) /  AXIS_Z_GEAR_RATIO * MOTOR_STEPS_PER_REVOLUTION) );
+        
+        moveAxis(AXIS_Z, steps);
 
-      unsigned long steps = static_cast<unsigned long>((abs(Z - value)) /  Z_screwPitch) * 200 * 8;
-      moveSteps(Z_STEP_PIN, steps, 50);
-      Z = value;
-      
+        Z = value;
     }
 
-    void AngleJ1(float angle) {
+    void AngleJ1(float targetAngle) {
       if (J1 == -1) {
         Serial.println("ERR! J1 is not homed yet");
         return; 
       }
 
-      if (J1 == angle || angle < 0) return;
-
-      if (angle > (J1max - J1_EndstopOffset)) {
+      if (J1 == targetAngle) return;
+      if (targetAngle < 0 || targetAngle > (AXIS_J1_MAX_ANGLE)) {
         Serial.println("ERR! Value is out of range");
         return;
       }
 
-      if (angle < J1) {
-        digitalWrite(J1_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(J1_DIR_PIN, LOW);
-      }
-
-      int steps = calculateAngle(J1_gear_ratio, J1_EndstopOffset, angle, J1);
-      moveSteps(J1_STEP_PIN, steps, 600);
-      J1 = angle;
-      
+      J1 = moveAngularAxis(AXIS_J1, J1, targetAngle, AXIS_J1_GEAR_RATIO);
     }
 
-    void AngleJ2(float angle) {
+    void AngleJ2(float targetAngle) {
       if (J2 == -1) {
         Serial.println("ERR! J2 is not homed yet");
         return; 
       }
 
-      if (J2 == angle || angle < 0) return;
-
-      if (angle > (J2max - J2_EndstopOffset)) {
+      if (J2 == targetAngle) return;
+      if (targetAngle < 0 || targetAngle > (AXIS_J2_MAX_ANGLE)) {
         Serial.println("ERR! Value is out of range");
         return;
       }
 
-      if (angle < J2) {
-        digitalWrite(J2_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(J2_DIR_PIN, LOW);
-      }
-
-      int steps = calculateAngle(J2_gear_ratio, J2_EndstopOffset, angle, J2);
-      moveSteps(J2_STEP_PIN, steps, 600);
-      J2 = angle;
-      
+      J2 = moveAngularAxis(AXIS_J2, J2, targetAngle, AXIS_J2_GEAR_RATIO);
     }
 
-    void AngleW(float angle) {
+    void AngleW(float targetAngle) {
       if (W == -1) {
         Serial.println("ERR! W is not homed yet");
         return; 
       }
 
-      if (W == angle || angle < 0) return;
-
-      if (angle > (Wmax - W_EndstopOffset)) {
+      if (W == targetAngle) return;
+      if (targetAngle < 0 || targetAngle > (AXIS_W_MAX_ANGLE)) {
         Serial.println("ERR! Value is out of range");
         return;
       }
 
-      if (angle < W) {
-        digitalWrite(W_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(W_DIR_PIN, LOW);
-      }
+      W = moveAngularAxis(AXIS_W, W, targetAngle, AXIS_W_GEAR_RATIO);
+    }
 
-      int steps = calculateAngle(W_gear_ratio, W_EndstopOffset, angle, W);
-      moveSteps(W_STEP_PIN, steps, 400);
-      W = angle;
-      
+    void homeZ() {
+      homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW);
+      Z = 0;
+      setZ(100);
+    }
+
+    void homeJ1() {
+        homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW);
+        J1 = 0;
+    }
+
+    void homeJ2() {
+        homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW);
+        J2 = 0;
+    }
+
+    void homeW() {
+        homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW);
+        W = 0;
+    }
+
+    void homeAll() {
+        homeZ();
+        homeJ1();
+        homeJ2();
+        homeW();
     }
 
     void printStatus() {
-      Serial.println("X: " + String(X) + " Y: " + String(Y) + " Z: " + String(Z));
-      Serial.println("J1: " + String(J1) + " J2: " + String(J2) + " W: " + String(W));
+        Serial.println("J1: " + String(J1) + " J2: " + String(J2) + " W: " + String(W));
+        Serial.println(" TAPE0: " + String(tape0) + " TAPE1: " + String(tape1));
+        Serial.println("Z: " + String(Z));
+        Serial.println("HOMING SPEED: " + String(homingSpeed) + " HOMING ACCELERATION: " + String(homingAcceleration));
+        Serial.println("MOVEMENT SPEED: " + String(movementSpeed) + " MOVEMENT ACCELERATION: " + String(movementAcceleration));
     }
 
-    void linearMove(String value) {
-      uint8_t colon = value.indexOf(":");
-      String J1_string = value.substring(0, colon);
-      String J2_string = value.substring(colon + 1);
+    void simultaneousMove(String value) {
+        uint8_t colon = value.indexOf(":");
+        String J1_string = value.substring(0, colon);
+        String J2_string = value.substring(colon + 1);
 
-      //AngleJ1(J1_string.toFloat());
-      //AngleJ2(J2_string.toFloat());
-      //return;
+        float J1_target_angle = J1_string.toFloat();
+        float J2_target_angle = J2_string.toFloat();
 
-      float J1_target_angle = J1_string.toFloat();
-      float J2_target_angle = J2_string.toFloat();
+        if (J1 == -1) {
+            Serial.println("ERR! J1 is not homed yet");
+            return; 
+        }
 
-      int J1_steps = calculateAngle(J1_gear_ratio, J1_EndstopOffset, J1_target_angle, J1);
-      int J2_steps = calculateAngle(J2_gear_ratio, J2_EndstopOffset, J2_target_angle, J2);
+        if (J2 == -1) {
+            Serial.println("ERR! J2 is not homed yet");
+            return; 
+        }
 
-      if (J1 == -1) {
-        Serial.println("ERR! J1 is not homed yet");
-        return; 
-      }
+        if (J1_target_angle < 0 || J1_target_angle > (AXIS_J1_MAX_ANGLE)) {
+            Serial.println("ERR! Value is out of range");
+            return;
+        }
 
-      if (J1 == J1_target_angle || J1_target_angle < 0) return;
 
-      if (J1_target_angle > (J1max - J1_EndstopOffset)) {
-        Serial.println("ERR! Value is out of range");
-        return;
-      }
-
-      if (J2 == -1) {
-        Serial.println("ERR! J2 is not homed yet");
-        return; 
-      }
-
-      if (J2 == J2_target_angle || J2_target_angle < 0) return;
-
-      if (J2_target_angle > (J2max - J2_EndstopOffset)) {
-        Serial.println("ERR! Value is out of range");
-        return;
-      }
+        if (J2_target_angle < 0 || J2_target_angle > (AXIS_J2_MAX_ANGLE)) {
+            Serial.println("ERR! Value is out of range");
+            return;
+        }
       
+        long J1_steps = calculateAngularSteps(AXIS_J1, J1, J1_target_angle, AXIS_J1_GEAR_RATIO);
+        long J2_steps = calculateAngularSteps(AXIS_J2, J2, J2_target_angle, AXIS_J2_GEAR_RATIO);
 
-      if (J2_target_angle < J2) {
-        digitalWrite(J2_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(J2_DIR_PIN, LOW);
-      }
+        AXIS_J1.setAcceleration(movementAcceleration);
+        AXIS_J1.setSpeed(movementSpeed);
 
-      if (J1_target_angle < J1) {
-        digitalWrite(J1_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(J1_DIR_PIN, LOW);
-      }
-      
-      // Oblicz największą liczbę kroków
-      int max_steps = max(J1_steps, J2_steps);
+        AXIS_J1.setAcceleration(movementAcceleration);
+        AXIS_J2.setSpeed(movementSpeed);
 
-      // Oblicz proporcje kroków dla każdego silnika
-      float J1_step_rate = J1_steps / (float)max_steps;
-      float J2_step_rate = J2_steps / (float)max_steps;
+        AXIS_J1.moveTo(J1_steps);
+        AXIS_J2.moveTo(J2_steps);
+    
+        do {
+            AXIS_J1.run();
+            AXIS_J2.run();
+        } while (AXIS_J1.isRunning() || AXIS_J2.isRunning());
 
-      float J1_accumulator = 0;
-      float J2_accumulator = 0;
-
-      int delay = 800;
-
-      for (int i = 0; i < max_steps; i++) {
-          J1_accumulator += J1_step_rate;
-          J2_accumulator += J2_step_rate;
-
-          if (J1_accumulator >= 1) {
-              digitalWrite(J1_STEP_PIN, HIGH); // Zrób krok silnikiem J1
-              delayMicroseconds(delay);
-              digitalWrite(J1_STEP_PIN, LOW);
-              delayMicroseconds(delay);
-              J1_accumulator -= 1; // Resetuj akumulator
-          }
-
-          if (J2_accumulator >= 1) {
-              digitalWrite(J2_STEP_PIN, HIGH); // Zrób krok silnikiem J2
-              delayMicroseconds(delay);
-              digitalWrite(J2_STEP_PIN, LOW);
-              delayMicroseconds(delay);
-              J2_accumulator -= 1; // Resetuj akumulator
-          }
-      }
-
-      J1 = J1_target_angle;
-      J2 = J2_target_angle;
+        J1 = J1_target_angle;
+        J2 = J2_target_angle;
     }
 
     void gripper(int value) {
@@ -308,74 +229,94 @@ class OpenSCARA {
     }
 
     void tape(int value) {
-      if (value < 0) {
-        digitalWrite(TAPE_DIR_PIN, HIGH);
-      } else {
-        digitalWrite(TAPE_DIR_PIN, LOW);
-      }
-
-      unsigned long steps = abs(value);
-      moveSteps(TAPE_STEP_PIN, steps, 200);
-      
+        long steps = AXIS_TAPE.currentPosition() + value;
+        moveAxis(AXIS_TAPE, steps);
+        tape0 = steps;
     }
 
-  OpenSCARA() {
-    // do some stuff
-  }
+    void setSpeed(int value) {
+        movementSpeed = value;
+    }
+
+    void setAccel(int value) {
+        movementAcceleration = value;
+    }
+
+    OpenSCARA() {}
 };
 
 OpenSCARA scara;
 
+void pinConfiguration() {
+    // gripper relays 
+    pinMode(RELAY_1_PIN, OUTPUT);
+    pinMode(RELAY_2_PIN, OUTPUT);
+    digitalWrite(RELAY_1_PIN, LOW);
+    digitalWrite(RELAY_2_PIN, LOW);
+  
+    // TAPE
+    pinMode(TAPE_STEP_PIN, OUTPUT);
+    pinMode(TAPE_DIR_PIN, OUTPUT);
+    pinMode(TAPE_ENABLE_PIN, OUTPUT);
+    digitalWrite(TAPE_ENABLE_PIN, LOW); // Enable Axis
+
+    // J1
+    pinMode(J1_STEP_PIN, OUTPUT);
+    pinMode(J1_DIR_PIN, OUTPUT);
+    pinMode(J1_ENABLE_PIN, OUTPUT);
+    digitalWrite(J1_ENABLE_PIN, LOW); // Enable Axis
+  
+    // J2
+    pinMode(J2_STEP_PIN, OUTPUT);
+    pinMode(J2_DIR_PIN, OUTPUT);
+    pinMode(J2_ENABLE_PIN, OUTPUT);
+    digitalWrite(J2_ENABLE_PIN, LOW); // Enable Axis
+
+    // Z
+    pinMode(Z_STEP_PIN, OUTPUT);
+    pinMode(Z_DIR_PIN, OUTPUT);
+    pinMode(Z_ENABLE_PIN, OUTPUT);
+    digitalWrite(Z_ENABLE_PIN, LOW); // Enable Axis
+
+    // W
+    pinMode(W_STEP_PIN, OUTPUT);
+    pinMode(W_DIR_PIN, OUTPUT);
+    pinMode(W_ENABLE_PIN, OUTPUT);
+
+    // Enable Axis
+    digitalWrite(W_ENABLE_PIN, LOW);
+
+    // Endstops
+    pinMode(J1_MIN_PIN, INPUT_PULLUP);
+    pinMode(J2_MIN_PIN, INPUT_PULLUP);
+    pinMode(Z_MIN_PIN, INPUT_PULLUP);
+    pinMode(W_MIN_PIN, INPUT_PULLUP);
+
+    // Motors config
+    AXIS_Z.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_Z.setAcceleration(DEFAULT_ACCELERATION);
+    
+    AXIS_J1.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_J1.setAcceleration(DEFAULT_ACCELERATION);
+
+    AXIS_J2.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_J2.setAcceleration(DEFAULT_ACCELERATION);
+
+    AXIS_W.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_W.setAcceleration(DEFAULT_ACCELERATION);
+
+    AXIS_TAPE.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_TAPE.setAcceleration(DEFAULT_ACCELERATION);
+}
+
 void setup() {
-  // gripper relays 
-  pinMode(RELAY_1_PIN, OUTPUT);
-  pinMode(RELAY_2_PIN, OUTPUT);
-  digitalWrite(RELAY_1_PIN, LOW);
-  digitalWrite(RELAY_2_PIN, LOW);
-  
-  // TAPE
-  pinMode(TAPE_STEP_PIN, OUTPUT);
-  pinMode(TAPE_DIR_PIN, OUTPUT);
-  pinMode(TAPE_ENABLE_PIN, OUTPUT);
-  digitalWrite(TAPE_ENABLE_PIN, LOW); // Enable Axis
+    pinConfiguration();
 
-  // J1
-  pinMode(J1_STEP_PIN, OUTPUT);
-  pinMode(J1_DIR_PIN, OUTPUT);
-  pinMode(J1_ENABLE_PIN, OUTPUT);
-  digitalWrite(J1_ENABLE_PIN, LOW); // Enable Axis
-  
-  // J2
-  pinMode(J2_STEP_PIN, OUTPUT);
-  pinMode(J2_DIR_PIN, OUTPUT);
-  pinMode(J2_ENABLE_PIN, OUTPUT);
-  digitalWrite(J2_ENABLE_PIN, LOW); // Enable Axis
+    Serial.begin(9600);
 
-  // Z
-  pinMode(Z_STEP_PIN, OUTPUT);
-  pinMode(Z_DIR_PIN, OUTPUT);
-  pinMode(Z_ENABLE_PIN, OUTPUT);
-  digitalWrite(Z_ENABLE_PIN, LOW); // Enable Axis
-
-  // W
-  pinMode(W_STEP_PIN, OUTPUT);
-  pinMode(W_DIR_PIN, OUTPUT);
-  pinMode(W_ENABLE_PIN, OUTPUT);
-
-  // Enable Axis
-  digitalWrite(W_ENABLE_PIN, LOW);
-
-  // Endstops
-  pinMode(J1_MIN_PIN, INPUT_PULLUP);
-  pinMode(J2_MIN_PIN, INPUT_PULLUP);
-  pinMode(Z_MIN_PIN, INPUT_PULLUP);
-  pinMode(W_MIN_PIN, INPUT_PULLUP);
-
-  Serial.begin(9600);
-
-  while (!Serial) {
-    ; // wait for serial port to connect.
-  }
+    while (!Serial) {
+        ; // wait for serial port to connect.
+    }
 }
 
 void parse(String buffer) {
@@ -418,10 +359,16 @@ void parse(String buffer) {
   else if (buffer.startsWith("STATUS")) {
     scara.printStatus();
   }
-  else if (buffer.startsWith("LINEAR")) {
-    scara.linearMove(value);
+  else if(buffer.startsWith("SETSPEED")) {
+    scara.setSpeed(value.toInt());
   }
-  else if (buffer.startsWith("TP")) {
+  else if(buffer.startsWith("SETACCEL")) {
+    scara.setAccel(value.toInt());
+  }
+  else if (buffer.startsWith("SIMULTANEOUS")) {
+    scara.simultaneousMove(value);
+  }
+  else if (buffer.startsWith("TAPE0")) {
     scara.tape(value.toInt());
   }
   else {

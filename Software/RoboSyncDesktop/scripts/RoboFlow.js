@@ -31,7 +31,7 @@ export default class RoboFlow {
                     console.log(rj1, rj2);
 
                     if(!headless) {
-                        await this.arm.executeUntilDone(`LINEAR ${rj1}:${rj2}`);
+                        await this.arm.executeUntilDone(`SIMULTANEOUS${rj1}:${rj2}`);
                         await this.arm.executeUntilDone(`Z ${height}`);
                     }
 
