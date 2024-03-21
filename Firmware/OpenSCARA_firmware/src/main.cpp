@@ -37,22 +37,29 @@ class OpenSCARA {
         } while (axis.isRunning());
     }
 
-    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, long homingDistance = HOMING_DISTANCE) {
+    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float speed, long homingDistance = HOMING_DISTANCE) {
+        // Determine direction of motor rotating
         if(direction == DIRECTION_CCW) {
             homingDistance = homingDistance * -1;
         }
 
+        // Assume we start from 0
         axis.setCurrentPosition(0);
-        axis.setSpeed(homingSpeed);
 
+        // Set speed
+        axis.setMaxSpeed(speed);
+        axis.setSpeed(speed);
+
+        // Move until endstop activation
         while(digitalRead(endstopPin) == HIGH) {
             axis.move(homingDistance);
             do {
-                axis.runSpeed();
+                axis.runSpeedToPosition();
             }
-            while(axis.distanceToGo() > 0);
+            while(axis.isRunning());
         }
 
+        // If endstop clicked, set current position as 0, and set acceleration setting 
         axis.setCurrentPosition(0);
         axis.setSpeed(movementSpeed);
         axis.setMaxSpeed(movementSpeed);
