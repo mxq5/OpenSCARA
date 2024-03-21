@@ -21,11 +21,9 @@ class OpenSCARA {
     long tape0 = 0;
     long tape1 = 0;
 
-    float homingAcceleration = DEFAULT_ACCELERATION;
+    // Acceleration and speed values for all axis
     float movementAcceleration = DEFAULT_ACCELERATION;
-
-    float homingSpeed = DEFAULT_MAX_SPEED;
-    float movementSpeed = DEFAULT_MAX_SPEED;
+    float movementSpeed = DEFAULT_SPEED;
 
     // Move single axis by steps
     void moveAxis(AccelStepper axis, unsigned long position) {
@@ -37,7 +35,7 @@ class OpenSCARA {
         } while (axis.isRunning());
     }
 
-    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float speed = DEFAULT_MAX_SPEED, long homingDistance = HOMING_DISTANCE) {
+    void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float speed = HOMING_SPEED, long homingDistance = HOMING_DISTANCE) {
         // Determine direction of motor rotating
         if(direction == DIRECTION_CCW) {
             homingDistance = homingDistance * -1;
@@ -46,7 +44,7 @@ class OpenSCARA {
         // Assume we start from 0
         axis.setCurrentPosition(0);
 
-        // Set speed
+        // Apply homing settings
         axis.setMaxSpeed(speed);
         axis.setSpeed(speed);
 
@@ -56,11 +54,11 @@ class OpenSCARA {
             axis.runSpeedToPosition();
         }
 
-        // If endstop clicked, set current position as 0, and set acceleration setting 
-        axis.setCurrentPosition(0);
+        // Apply movement settings back
         axis.setSpeed(movementSpeed);
         axis.setMaxSpeed(movementSpeed);
         axis.setAcceleration(movementAcceleration);
+
         delay(500);
     }
 
@@ -80,15 +78,17 @@ class OpenSCARA {
             return; 
         }
 
-        if (Z == value || value < 0) return;
+        if (Z == value) return;
 
-        if (value > (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT)) {
+        if (value < 0 || value > (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT)) {
             Serial.println("ERR! Z is out of range");
             return;
         }
 
-        long steps = static_cast<long>(AXIS_Z.currentPosition() + ((Z - value) /  (AXIS_Z_GEAR_RATIO * MOTOR_STEPS_PER_REVOLUTION)) );
-        Serial.println("OBLZ: " + String(steps));
+        float mm_difference = Z - value;
+        long steps_difference = static_cast<long>((mm_difference * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
+        long steps = AXIS_Z.currentPosition() - steps_difference;
+
         moveAxis(AXIS_Z, steps);
 
         Z = value;
@@ -140,23 +140,33 @@ class OpenSCARA {
     }
 
     void homeZ() {
-        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 12000);
-        Z = 0;
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 1000);
+
+        // HOMED Z IS ON THE TOP OF AXIS
+        Z = (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT); 
+
+        // Synchronize current position with accel library steps position
+        AXIS_Z.setCurrentPosition((Z * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
+        
+        // SET AXIS ON Z = 100mm
         setZ(100);
     }
 
     void homeJ1() {
         homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW);
+        AXIS_J1.setCurrentPosition(0);
         J1 = 0;
     }
 
     void homeJ2() {
         homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW);
+        AXIS_J2.setCurrentPosition(0);
         J2 = 0;
     }
 
     void homeW() {
         homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW);
+        AXIS_W.setCurrentPosition(0);
         W = 0;
     }
 
@@ -171,7 +181,6 @@ class OpenSCARA {
         Serial.println("J1: " + String(J1) + " J2: " + String(J2) + " W: " + String(W));
         Serial.println(" TAPE0: " + String(tape0) + " TAPE1: " + String(tape1));
         Serial.println("Z: " + String(Z));
-        Serial.println("HOMING SPEED: " + String(homingSpeed) + " HOMING ACCELERATION: " + String(homingAcceleration));
         Serial.println("MOVEMENT SPEED: " + String(movementSpeed) + " MOVEMENT ACCELERATION: " + String(movementAcceleration));
     }
 
@@ -301,19 +310,19 @@ void pinConfiguration() {
     pinMode(W_MIN_PIN, INPUT_PULLUP);
 
     // Motors config
-    AXIS_Z.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_Z.setMaxSpeed(DEFAULT_SPEED);
     AXIS_Z.setAcceleration(DEFAULT_ACCELERATION);
     
-    AXIS_J1.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_J1.setMaxSpeed(DEFAULT_SPEED);
     AXIS_J1.setAcceleration(DEFAULT_ACCELERATION);
 
-    AXIS_J2.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_J2.setMaxSpeed(DEFAULT_SPEED);
     AXIS_J2.setAcceleration(DEFAULT_ACCELERATION);
 
-    AXIS_W.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_W.setMaxSpeed(DEFAULT_SPEED);
     AXIS_W.setAcceleration(DEFAULT_ACCELERATION);
 
-    AXIS_TAPE.setMaxSpeed(DEFAULT_MAX_SPEED);
+    AXIS_TAPE.setMaxSpeed(DEFAULT_SPEED);
     AXIS_TAPE.setAcceleration(DEFAULT_ACCELERATION);
 }
 
