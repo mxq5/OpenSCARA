@@ -50,9 +50,9 @@ class OpenSCARA {
             do {
                 axis.runSpeed();
             }
-            while(axis.isRunning());
+            while(axis.distanceToGo() > 0);
         }
-        
+
         axis.setCurrentPosition(0);
         axis.setSpeed(movementSpeed);
         axis.setMaxSpeed(movementSpeed);
@@ -136,7 +136,7 @@ class OpenSCARA {
     }
 
     void homeZ() {
-        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 10000, MOTOR_STEPS_PER_REVOLUTION);
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 20000, MOTOR_STEPS_PER_REVOLUTION);
         Z = 0;
         setZ(100);
     }
