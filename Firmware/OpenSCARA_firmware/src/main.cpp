@@ -26,9 +26,9 @@ class OpenSCARA {
     float movementSpeed = DEFAULT_SPEED;
 
     // Move single axis by steps
-    void moveAxis(AccelStepper axis, unsigned long position) {
-        axis.setMaxSpeed(movementSpeed);
-        axis.setAcceleration(movementAcceleration);
+    void moveAxis(AccelStepper axis, unsigned long position, float acceleration = DEFAULT_ACCELERATION, float speed = DEFAULT_SPEED) {
+        axis.setMaxSpeed(speed);
+        axis.setAcceleration(acceleration);
         axis.moveTo(position);
         do {
             axis.run();
@@ -68,7 +68,7 @@ class OpenSCARA {
 
     float moveAngularAxis(AccelStepper axis, float currentAngle, float targetAngle, float gearRatio) {
         long stepsPosition = calculateAngularSteps(axis, currentAngle, targetAngle, gearRatio);
-        moveAxis(axis, stepsPosition);
+        moveAxis(axis, stepsPosition, movementAcceleration, movementSpeed);
         return targetAngle;
     }
     
@@ -89,7 +89,7 @@ class OpenSCARA {
         long steps_difference = static_cast<long>((mm_difference * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
         long steps = AXIS_Z.currentPosition() - steps_difference;
 
-        moveAxis(AXIS_Z, steps);
+        moveAxis(AXIS_Z, steps, DEFAULT_Z_AXIS_ACCELERATION, DEFAULT_Z_AXIS_SPEED);
 
         Z = value;
     }
@@ -140,7 +140,7 @@ class OpenSCARA {
     }
 
     void homeZ() {
-        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, 1000);
+        homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, DEFAULT_Z_AXIS_HOMING_SPEED);
 
         // HOMED Z IS ON THE TOP OF AXIS
         Z = (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT); 
