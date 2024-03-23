@@ -617,7 +617,7 @@ btn_speed_control.addEventListener('click', () => {
     const baseSpeed = 1000;
     const newSpeed = baseSpeed * (currentSpeed + 1);
 
-    arm.port.write(`SPEED_MULTIPLIER ${newSpeed}\n`);
+    arm.port.write(`SPEED_MULTIPLIER ${(newSpeed+1)}\n`);
 });
 
 window.addEventListener('keydown', (event) => {
