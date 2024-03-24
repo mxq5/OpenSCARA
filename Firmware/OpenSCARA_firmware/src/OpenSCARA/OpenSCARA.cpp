@@ -82,27 +82,22 @@ float OpenSCARA::moveAngularAxis(AccelStepper axis, float currentAngle, float ta
     return targetAngle;
 }
 
-void OpenSCARA::homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, float movementSpeed, float movementAcceleration) {
+void OpenSCARA::homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, float homingAcceleration, float movementSpeed, float movementAcceleration) {
     // Determine direction of motor rotating
 
-    // mock distance to move motor until hits endstop
-    int homingDistance = 1000;
+    int homingStep = direction == DIRECTION_CCW ? -5000 : 5000;
     
-    if(direction == DIRECTION_CCW) {
-        homingDistance = homingDistance * -1;
-    }
-
     // Assume we start from 0
     axis.setCurrentPosition(0);
 
     // Apply homing settings
     axis.setMaxSpeed(homingSpeed);
-    axis.setSpeed(homingSpeed);
+    axis.setAcceleration(homingAcceleration);
 
     // Move until endstop activation
     while(digitalRead(endstopPin) == HIGH) {
-        axis.move(homingDistance);
-        axis.runSpeedToPosition();
+        axis.move(homingStep);
+        axis.run();
     }
 
     // Apply movement settings back
@@ -128,7 +123,7 @@ void OpenSCARA::setZ(int value) {
 
     float mm_difference = Z - value;
     long steps_difference = static_cast<long>((mm_difference * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
-    long steps = AXIS_Z.currentPosition() - steps_difference;
+    long steps = AXIS_Z.currentPosition() + steps_difference;
 
     moveAxis(AXIS_Z, steps, Z_movementSpeed, Z_movementAcceleration);
 
@@ -181,7 +176,7 @@ void OpenSCARA::AngleW(float targetAngle) {
 }
 
 void OpenSCARA::homeZ() {
-    homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, Z_AXIS_INPUT_HOMING_SPEED, Z_movementSpeed, Z_movementAcceleration);
+    homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, Z_AXIS_INPUT_HOMING_SPEED, Z_AXIS_INPUT_HOMING_ACCELERATION, Z_movementSpeed, Z_movementAcceleration);
 
     // HOMED Z IS ON THE TOP OF AXIS
     Z = (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT); 
@@ -194,19 +189,19 @@ void OpenSCARA::homeZ() {
 }
 
 void OpenSCARA::homeJ1() {
-    homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW, J1_AXIS_INPUT_HOMING_SPEED, J1_movementSpeed, J1_movementAcceleration);
+    homeAxis(AXIS_J1, J1_MIN_PIN, DIRECTION_CW, J1_AXIS_INPUT_HOMING_SPEED, J1_AXIS_INPUT_HOMING_ACCELERATION, J1_movementSpeed, J1_movementAcceleration);
     AXIS_J1.setCurrentPosition(0);
     J1 = 0;
 }
 
 void OpenSCARA::homeJ2() {
-    homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW, J2_AXIS_INPUT_HOMING_SPEED, J2_movementSpeed, J2_movementAcceleration);
+    homeAxis(AXIS_J2, J2_MIN_PIN, DIRECTION_CW, J2_AXIS_INPUT_HOMING_SPEED, J2_AXIS_INPUT_HOMING_ACCELERATION, J2_movementSpeed, J2_movementAcceleration);
     AXIS_J2.setCurrentPosition(0);
     J2 = 0;
 }
 
 void OpenSCARA::homeW() {
-    homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW, W_AXIS_INPUT_HOMING_SPEED, W_movementSpeed, W_movementAcceleration);
+    homeAxis(AXIS_W, W_MIN_PIN, DIRECTION_CW, W_AXIS_INPUT_HOMING_SPEED, J2_AXIS_INPUT_HOMING_ACCELERATION, W_movementSpeed, W_movementAcceleration);
     AXIS_W.setCurrentPosition(0);
     W = 0;
 }
@@ -301,15 +296,15 @@ void OpenSCARA::setSpeed(String value) {
 
     int axisSpeed = speed.toFloat();
     if (axis == "Z") {
-        Z_movementSpeed = axisSpeed;
+        Z_movementSpeed = axisSpeed * AXIS_Z_GEAR_RATIO;
     } else if (axis == "J1") {
-        J1_movementSpeed = axisSpeed;
+        J1_movementSpeed = axisSpeed * AXIS_J1_GEAR_RATIO;
     } else if (axis == "J2") {
-        J2_movementSpeed = axisSpeed;
+        J2_movementSpeed = axisSpeed * AXIS_J2_GEAR_RATIO;
     } else if (axis == "W") {
-        W_movementSpeed = axisSpeed;
+        W_movementSpeed = axisSpeed * AXIS_W_GEAR_RATIO;
     } else if (axis == "TAPE") {
-        TAPE_movementSpeed = axisSpeed;
+        TAPE_movementSpeed = axisSpeed * AXIS_TAPE_GEAR_RATIO;
     }
 }
 

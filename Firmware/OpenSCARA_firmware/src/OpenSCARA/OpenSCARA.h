@@ -72,5 +72,5 @@ class OpenSCARA {
         long calculateAngularSteps(AccelStepper axis, float currentAngle, float targetAngle, float gearRatio);
         void moveAxis(AccelStepper axis, unsigned long position, float speed, float acceleration);
         float moveAngularAxis(AccelStepper axis, float currentAngle, float targetAngle, float gearRatio, float speed, float acceleration);
-        void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, float movementSpeed, float movementAcceleration);
+        void homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, float homingAcceleration, float movementSpeed, float movementAcceleration);
 };
