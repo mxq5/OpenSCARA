@@ -102,9 +102,8 @@ class Arm {
         let iterations = 0;
         return new Promise((resolve, reject) => {
             this.port.write(`${command}\n`);
-    
             const checkFlag = () => {
-                if (this.executionFlag || iterations > 50) {
+                if (this.executionFlag) {
                     this.executionFlag = false;
                     resolve();
                 } else {
