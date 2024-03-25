@@ -1,0 +1,35 @@
+GRIPPER OPEN
+# Ustawienie początkowe obrotu chwytaka
+ROTGRIP 0
+
+# Kostka 1 na współrzędnych 220 0 0
+# Podejście do kostki 1
+MOVE 220 0 40
+MOVE 220 0 10 
+GRIPPER CLOSE
+MOVE 220 0 40 
+MOVE 0 300 40 
+MOVE 0 300 39 
+GRIPPER OPEN
+MOVE 0 300 40 
+
+# Kostka 2 na współrzędnych 250 0 0
+# Podejście do kostki 2
+MOVE 250 0 40
+MOVE 250 0 10 
+GRIPPER CLOSE
+MOVE 250 0 40 
+MOVE 0 300 40
+MOVE 0 300 69 
+GRIPPER OPEN
+MOVE 0 300 40 
+
+# Kostka 3 na współrzędnych 280 0 0
+# Podejście do kostki 3
+MOVE 280 0 40
+MOVE 280 0 10 
+GRIPPER CLOSE
+MOVE 280 0 40
+MOVE 0 300 40
+MOVE 0 300 99
+GRIPPER OPEN
