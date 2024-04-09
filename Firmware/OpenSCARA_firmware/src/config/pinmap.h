@@ -45,5 +45,5 @@
 
 
 // Relays 
-#define RELAY_1_PIN         47
-#define RELAY_2_PIN         32
+#define RELAY_1_PIN         32
+#define RELAY_2_PIN         47
