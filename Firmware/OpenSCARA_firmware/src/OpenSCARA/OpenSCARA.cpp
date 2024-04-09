@@ -121,7 +121,7 @@ void OpenSCARA::setZ(int value) {
         return;
     }
 
-    float mm_difference = Z - value;
+    float mm_difference = value;
     long steps_difference = static_cast<long>((mm_difference * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
     long steps = AXIS_Z.currentPosition() + steps_difference;
 
