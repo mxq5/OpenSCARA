@@ -46,17 +46,17 @@ void OpenSCARA::pinConfiguration() {
     pinMode(W_MIN_PIN, INPUT_PULLUP);
 
     // Motors config
-    AXIS_Z.setMaxSpeed(Z_AXIS_SPEED);
-    AXIS_Z.setAcceleration(Z_AXIS_ACCELERATION);
+    AXIS_Z.setMaxSpeed(Z_AXIS_INPUT_SPEED);
+    AXIS_Z.setAcceleration(Z_AXIS_INPUT_ACCELERATION);
     
-    AXIS_J1.setMaxSpeed(J1_AXIS_SPEED);
-    AXIS_J1.setAcceleration(J1_AXIS_ACCELERATION);
+    AXIS_J1.setMaxSpeed(J1_AXIS_INPUT_SPEED);
+    AXIS_J1.setAcceleration(J1_AXIS_INPUT_ACCELERATION);
 
-    AXIS_J2.setMaxSpeed(J2_AXIS_SPEED);
-    AXIS_J2.setAcceleration(J2_AXIS_ACCELERATION);
+    AXIS_J2.setMaxSpeed(J2_AXIS_INPUT_SPEED);
+    AXIS_J2.setAcceleration(J2_AXIS_INPUT_ACCELERATION);
 
-    AXIS_W.setMaxSpeed(W_AXIS_SPEED);
-    AXIS_W.setAcceleration(W_AXIS_ACCELERATION);
+    AXIS_W.setMaxSpeed(W_AXIS_INPUT_SPEED);
+    AXIS_W.setAcceleration(W_AXIS_INPUT_ACCELERATION);
 
     AXIS_TAPE.setMaxSpeed(TAPE_AXIS_INPUT_SPEED);
     AXIS_TAPE.setAcceleration(TAPE_AXIS_INPUT_ACCELERATION);
@@ -82,7 +82,7 @@ float OpenSCARA::moveAngularAxis(AccelStepper axis, float currentAngle, float ta
     return targetAngle;
 }
 
-void OpenSCARA::homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, float homingSpeed, float homingAcceleration, float movementSpeed, float movementAcceleration) {
+void OpenSCARA::homeAxis(AccelStepper axis, uint8_t endstopPin, uint8_t direction, double homingSpeed, float homingAcceleration, float movementSpeed, float movementAcceleration) {
     // Determine direction of motor rotating
 
     int homingStep = direction == DIRECTION_CCW ? -5000 : 5000;
@@ -176,15 +176,18 @@ void OpenSCARA::AngleW(float targetAngle) {
 }
 
 void OpenSCARA::homeZ() {
-    homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, Z_AXIS_INPUT_HOMING_SPEED, Z_AXIS_INPUT_HOMING_ACCELERATION, Z_movementSpeed, Z_movementAcceleration);
+    homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CW, Z_AXIS_INPUT_HOMING_SPEED, Z_AXIS_INPUT_HOMING_ACCELERATION, Z_movementSpeed, Z_movementAcceleration);
 
     // HOMED Z IS ON THE TOP OF AXIS
-    Z = (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT); 
+    //Z = (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT); 
 
     // Synchronize current position with accel library steps position
-    AXIS_Z.setCurrentPosition((Z * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
+    //AXIS_Z.setCurrentPosition((Z * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
     
     // SET AXIS ON Z = 100mm
+    
+    AXIS_Z.setCurrentPosition(0);
+    Z = 0;
     setZ(100);
 }
 
