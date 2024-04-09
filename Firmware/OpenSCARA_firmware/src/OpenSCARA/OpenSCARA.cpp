@@ -121,7 +121,7 @@ void OpenSCARA::setZ(int value) {
         return;
     }
 
-    long steps = static_cast<long>(((value / AXIS_Z_GEAR_RATIO) * MOTOR_STEPS_PER_REVOLUTION));
+    long steps = static_cast<long>(((static_cast<double>(value) / AXIS_Z_GEAR_RATIO) * MOTOR_STEPS_PER_REVOLUTION));
 
     moveAxis(AXIS_Z, steps, Z_movementSpeed, Z_movementAcceleration);
 
