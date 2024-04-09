@@ -121,7 +121,9 @@ void OpenSCARA::setZ(int value) {
         return;
     }
 
-    long steps = static_cast<long>(((static_cast<double>(value) / AXIS_Z_GEAR_RATIO) * MOTOR_STEPS_PER_REVOLUTION));
+    float mm_difference = Z - value;
+    long steps_difference = static_cast<long>((mm_difference * (MOTOR_STEPS_PER_REVOLUTION / AXIS_Z_GEAR_RATIO)));
+    long steps = AXIS_Z.currentPosition() + steps_difference;
 
     moveAxis(AXIS_Z, steps, Z_movementSpeed, Z_movementAcceleration);
 
@@ -174,7 +176,7 @@ void OpenSCARA::AngleW(float targetAngle) {
 }
 
 void OpenSCARA::homeZ() {
-    homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CCW, Z_AXIS_INPUT_HOMING_SPEED, Z_AXIS_INPUT_HOMING_ACCELERATION, Z_movementSpeed, Z_movementAcceleration);
+    homeAxis(AXIS_Z, Z_MIN_PIN, DIRECTION_CW, Z_AXIS_INPUT_HOMING_SPEED, Z_AXIS_INPUT_HOMING_ACCELERATION, Z_movementSpeed, Z_movementAcceleration);
 
     // HOMED Z IS ON THE TOP OF AXIS
     //Z = (AXIS_Z_MAX_VALUE - AXIS_Z_AXIS_HEIGHT); 
